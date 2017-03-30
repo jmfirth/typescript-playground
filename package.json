@@ -15,7 +15,8 @@
     "lz-string": "^1.4.4",
     "monaco-editor": "^0.8.3",
     "preact": "^7.2.1",
-    "rimraf": "^2.6.1"
+    "rimraf": "^2.6.1",
+    "source-map-support": "0.4.3"
   },
   "scripts": {
     "start": "preact-scripts-ts start",
