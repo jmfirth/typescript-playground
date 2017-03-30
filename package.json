@@ -2,6 +2,7 @@
   "name": "monaco-editor",
   "version": "0.1.0",
   "private": true,
+  "homepage": "http://jmfirth.github.io/typescript-playground",
   "devDependencies": {
     "preact-scripts-ts": "0.9.7"
   },
@@ -22,6 +23,19 @@
     "start": "preact-scripts-ts start",
     "build": "preact-scripts-ts build",
     "test": "preact-scripts-ts test --env=jsdom",
-    "eject": "preact-scripts-ts eject"
+    "eject": "preact-scripts-ts eject",
+    "lint": "tslint -c ./tslint.json \"src/**/*.ts\" \"src/**/*.tsx\" -e \"src/**/*.d.ts\"",
+    "deploy": "gh-pages-deploy",
+    "clean-source": "rimraf src public build package.json tsconfig.json tslint.json yarn.lock"
+  },
+  "gh-pages-deploy": {
+    "staticpath": "build",
+    "prep": [
+      "build"
+    ],
+    "post": [
+      "clean-source"
+    ],
+    "noprompt": false
   }
 }
