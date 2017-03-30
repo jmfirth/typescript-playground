@@ -31,7 +31,7 @@ function getIFrameSource(source: string, css: string, dependencies: { [key: stri
     // break the js extension override to load modules with .js extensions
     require.jsExtRegExp = /^#$/;
     ${source}
-    require(['entry']);
+    require(['./entry']);
   </script>
 </html>
 `;
@@ -60,8 +60,8 @@ class App extends Component<null, State> {
     dependencies: defaults.dependencies,
     definitions: defaults.definitions,
     // This line disables errors in jsx tags like <div>, etc.
-    syntaxValidation: true,
-    semanticValidation: true,
+    syntaxValidation: false,
+    semanticValidation: false,
     editorMounted: false,
   };
 
@@ -105,6 +105,15 @@ class App extends Component<null, State> {
           >
             Share
           </div>
+          {/*<div
+            className="toolbar-item"
+            onClick={() => this.setState({
+              semanticValidation: !this.state.semanticValidation,
+              syntaxValidation: !this.state.syntaxValidation,
+            })}
+          >
+            Validate
+          </div>*/}
         </div>
         <div id="buffers">
           <div className="buffer">
@@ -120,21 +129,22 @@ class App extends Component<null, State> {
             />
           </div>
           <div className="buffer">
-            {this.state.editorMounted &&
-            <iframe
-              className="surface"
-              srcDoc={getIFrameSource(
-                this.state.transpiled,
-                this.state.css,
-                this.state.dependencies
-              )}
-              ref={c => {
-                if (!this.c) {
-                  this.setState({ editorMounted: true });
-                }
-                this.c = c as Element;
-              }}
-            />}
+            {this.state.editorMounted && (
+              <iframe
+                className="surface"
+                srcDoc={getIFrameSource(
+                  this.state.transpiled,
+                  this.state.css,
+                  this.state.dependencies
+                )}
+                ref={c => {
+                  if (!this.c) {
+                    this.setState({ editorMounted: true });
+                  }
+                  this.c = c as Element;
+                }}
+              />
+            )}
           </div>
         </div>
       </div>

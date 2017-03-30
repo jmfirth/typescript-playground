@@ -159,11 +159,30 @@ class MonacoEditor extends Component<Props, State> {
       //   mimetypes: ['text/typescript']
       // });
 
+      // monaco.languages.typescript.typescriptDefaults.setCompilerOptions({
+      //   // allowJs: true,
+      //   // module: monaco.languages.typescript.ModuleKind.AMD,
+      //   // outFile: 'bundle.js',
+      //   // target: monaco.languages.typescript.ScriptTarget.ES5,
+      //   // lib: ['es6', 'dom', 'node'],
+      //   // jsx: monaco.languages.typescript.JsxEmit.React,
+      //   // jsxFactory: 'h',
+      //   // maxNodeModuleJsDepth: 100,
+      //   // allowSyntheticDefaultImports: true,
+      //   // forceConsistentCasingInFileNames: true,
+      //   // noImplicitReturns: true,
+      //   // noImplicitThis: true,
+      //   // noImplicitAny: true,
+      //   // strictNullChecks: true,
+      //   // suppressImplicitAnyIndexErrors: true,
+      //   // noUnusedLocals: true
+      // });
+
       if (this.props.diagnosticOptions) {
         monaco.languages.typescript.typescriptDefaults.setDiagnosticsOptions(this.props.diagnosticOptions);
         // monaco.languages.typescript.typescriptDefaults.setDiagnosticsOptions({
-        //   noSemanticValidation: true,
-        //   noSyntaxValidation: true, // This line disables errors in jsx tags like <div>, etc.
+        //   noSemanticValidation: false,
+        //   noSyntaxValidation: false, // This line disables errors in jsx tags like <div>, etc.
         // });
       }
 

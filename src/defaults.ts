@@ -18,7 +18,6 @@ render(<HelloWorld />, document.body);
 
 export const pixiSource = `// an example of drawing with PIXI.js
 import * as PIXI from 'pixi.js';
-const REGL = require('regl');
 
 let renderer: PIXI.WebGLRenderer | PIXI.CanvasRenderer = null;
 
@@ -104,7 +103,7 @@ export const dependencies = {
   preact: 'https://cdnjs.cloudflare.com/ajax/libs/preact/7.2.1/preact.min',
   'pixi.js': 'https://cdnjs.cloudflare.com/ajax/libs/pixi.js/4.4.3/pixi.min',
   'three.js': 'https://cdnjs.cloudflare.com/ajax/libs/three.js/84/three.min',
-  regl: 'https://cdnjs.cloudflare.com/ajax/libs/regl/1.3.0/regl.min'
+  regl: 'https://cdnjs.cloudflare.com/ajax/libs/regl/1.3.0/regl.min',
 };
 
 export const definitions = {
