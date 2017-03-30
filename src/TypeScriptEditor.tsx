@@ -4,16 +4,7 @@ import * as TypeScript from 'typescript';
 import * as compiler from './compiler';
 import { debounce } from 'lodash';
 
-interface ExternalReference {
-  name: string;
-  url: string;
-}
-
 interface References { [name: string]: string; }
-
-function createExternalReference(name: string, url: string): ExternalReference {
-  return { name, url };
-}
 
 const LOCAL_STORAGE_PREFIX = 'tspg-cache-';
 
@@ -26,73 +17,6 @@ const setStorageItem = (fragment: string, value: string) =>
   localStorage.setItem(getStorageKey(fragment), value);
 
 const notInStorage = (fragment: string) => !getStorageItem(fragment); // tslint:disable-line no-any
-
-let definitions = [
-  createExternalReference('node.d.ts', 'https://unpkg.com/@types/node/index.d.ts'),
-  createExternalReference('preact.d.ts', 'https://unpkg.com/preact/src/preact.d.ts'),
-  // createExternalReference('three.d.ts', 'https://unpkg.com/@types/three/index.d.ts'),
-  createExternalReference('detector.d.ts', 'https://unpkg.com/@types/three/detector.d.ts'),
-  createExternalReference(
-    'three-FirstPersonControls.d.ts',
-    'https://unpkg.com/@types/three@0.84.3/three-FirstPersonControls.d.ts'),
-  createExternalReference(
-    'three-canvasrenderer.d.ts',
-    'https://unpkg.com/@types/three@0.84.3/three-canvasrenderer.d.ts'),
-  createExternalReference(
-    'three-colladaLoader.d.ts',
-    'https://unpkg.com/@types/three@0.84.3/three-colladaLoader.d.ts'),
-  createExternalReference(
-    'three-copyshader.d.ts',
-    'https://unpkg.com/@types/three@0.84.3/three-copyshader.d.ts'),
-  createExternalReference(
-    'three-css3drenderer.d.ts',
-    'https://unpkg.com/@types/three@0.84.3/three-css3drenderer.d.ts'),
-  createExternalReference(
-    'three-ctmloader.d.ts',
-    'https://unpkg.com/@types/three@0.84.3/three-ctmloader.d.ts'),
-  createExternalReference(
-    'three-editorcontrols.d.ts',
-    'https://unpkg.com/@types/three@0.84.3/three-editorcontrols.d.ts'),
-  createExternalReference(
-    'three-effectcomposer.d.ts',
-    'https://unpkg.com/@types/three@0.84.3/three-effectcomposer.d.ts'),
-  createExternalReference(
-    'three-maskpass.d.ts',
-    'https://unpkg.com/@types/three@0.84.3/three-maskpass.d.ts'),
-  createExternalReference(
-    'three-octree.d.ts',
-    'https://unpkg.com/@types/three@0.84.3/three-octree.d.ts'),
-  createExternalReference(
-    'three-orbitcontrols.d.ts',
-    'https://unpkg.com/@types/three@0.84.3/three-orbitcontrols.d.ts'),
-  createExternalReference(
-    'three-orthographictrackballcontrols.d.ts',
-    'https://unpkg.com/@types/three@0.84.3/three-orthographictrackballcontrols.d.ts'),
-  createExternalReference(
-    'three-projector.d.ts',
-    'https://unpkg.com/@types/three@0.84.3/three-projector.d.ts'),
-  createExternalReference(
-    'three-renderpass.d.ts',
-    'https://unpkg.com/@types/three@0.84.3/three-renderpass.d.ts'),
-  createExternalReference(
-    'three-shaderpass.d.ts',
-    'https://unpkg.com/@types/three@0.84.3/three-shaderpass.d.ts'),
-  createExternalReference(
-    'three-trackballcontrols.d.ts',
-    'https://unpkg.com/@types/three@0.84.3/three-trackballcontrols.d.ts'),
-  createExternalReference(
-    'three-transformcontrols.d.ts',
-    'https://unpkg.com/@types/three@0.84.3/three-transformcontrols.d.ts'),
-  createExternalReference(
-    'three-vrcontrols.d.ts',
-    'https://unpkg.com/@types/three@0.84.3/three-vrcontrols.d.ts'),
-  createExternalReference(
-    'three-vreffect.d.ts',
-    'https://unpkg.com/@types/three@0.84.3/three-vreffect.d.ts'),
-  createExternalReference(
-    'pixi.js.d.ts',
-    'https://unpkg.com/@types/pixi.js@4.4.1/index.d.ts')
-];
 
 interface Props {
   code?: string;
@@ -151,8 +75,11 @@ export default class TypeScriptEditor extends Component<Props, void> {
   }
 
   addLanguageDefinitions() {
-    definitions.forEach((d, n) =>
-      this.monaco.languages.typescript.typescriptDefaults.addExtraLib(getStorageItem(d.name) as string, d.name));
+    Object.keys(this.props.definitions).forEach(key => {
+      if (this.props.definitions) {
+        this.monaco.languages.typescript.typescriptDefaults.addExtraLib(getStorageItem(key) as string, key);
+      }
+    });
   }
 
   editorChanged(code: string, event?: monaco.editor.IModelContentChangedEvent2) {

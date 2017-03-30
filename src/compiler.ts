@@ -140,7 +140,7 @@ export function createConfiguration(source: string) {
       outFile: 'bundle.js',
       module: TypeScript.ModuleKind.AMD,
       target: TypeScript.ScriptTarget.ES5,
-      lib: ['es6', 'dom', 'es2015', 'node'],
+      lib: ['es6', 'dom', 'node'],
       jsx: TypeScript.JsxEmit.React,
       jsxFactory: 'h',
       allowJs: true,

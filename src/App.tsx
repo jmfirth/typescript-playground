@@ -116,10 +116,11 @@ class App extends Component<null, State> {
                 noSyntaxValidation: !this.state.syntaxValidation,
               }}
               definitions={this.state.definitions}
-              // editorDidMount={() => this.setState({ editorMounted: true })}
+              editorDidMount={() => this.setState({ editorMounted: true })}
             />
           </div>
           <div className="buffer">
+            {this.state.editorMounted &&
             <iframe
               className="surface"
               srcDoc={getIFrameSource(
@@ -133,7 +134,7 @@ class App extends Component<null, State> {
                 }
                 this.c = c as Element;
               }}
-            />
+            />}
           </div>
         </div>
       </div>
