@@ -27,13 +27,18 @@ let rafHandle: number = null;
 
 function start(container) {
   renderer = PIXI.autoDetectRenderer(window.innerWidth, window.innerHeight);
-  renderer.autoResize = true;
-  renderer.view.style.height = '100%';
-  renderer.view.style.width = '100%';
+  resize();
   container.appendChild(renderer.view);
 
   stage = new PIXI.Container();
   update(0);
+}
+
+function resize () {
+  renderer.view.style.width = window.innerWidth + "px";
+  renderer.view.style.height = window.innerHeight + "px";
+  renderer.resize(window.innerWidth, window.innerHeight);
+  window.onresize = resize;
 }
 
 function update(tick: number) {
