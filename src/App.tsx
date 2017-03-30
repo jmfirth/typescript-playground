@@ -85,7 +85,8 @@ class App extends Component<null, State> {
   }
 
   shareUrl() {
-    return `${window.location.origin}?source=${lzs.compressToEncodedURIComponent(this.state.source)}`;
+    const { origin, pathname } = window.location;
+    return `${origin}${pathname}?source=${lzs.compressToEncodedURIComponent(this.state.source)}`;
   }
 
   render() {
