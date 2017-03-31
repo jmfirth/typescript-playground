@@ -1,60 +1,31 @@
-// @TODO:
-// hyperscript by default!
-// save feature
-// css editor
-// tabs
-// toolbar
-// hotkeys
-// console
-// html editor
-// instrumentation
-// hot reload
-
 import { h, Component } from 'preact';
 import * as TypeScript from 'typescript';
 import * as lzs from 'lz-string';
-import debounce = require('lodash/debounce');
-import MonacoEditor from './MonacoEditor';
-import TypeScriptEditor from './TypeScriptEditor';
-import IconButton from './IconButton';
+import * as moment from 'moment';
+import {
+  CSSEditor,
+  HTMLEditor,
+  IconButton,
+  IconLink,
+  RenderFrame,
+  TypeScriptEditor,
+} from './components/index';
 import * as defaults from './defaults';
+import { storage, location, github } from './utilities';
 import 'material-design-icons/iconfont/material-icons.css';
 import 'mdi/css/materialdesignicons.css';
 import 'mdi/fonts/materialdesignicons-webfont.ttf';
 import 'mdi/fonts/materialdesignicons-webfont.woff';
 import 'mdi/fonts/materialdesignicons-webfont.woff2';
-// import * as pastebin from './pastebin';
 
-function getIFrameSource(source: string, css: string, html: string, dependencies: { [key: string]: string }) {
-  return `
-<html>
-  <head>
-    <style type="text/css">
-${css}
-    </style>
-  </head>
-  <body>
-${html}
-  </body>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/systemjs/0.20.11/system.js"></script>
-  <script>
-SystemJS.config({
-  baseURL: 'http://browserify-cdn.abstractsequential.com:8080/standalone/',
-});
+const LOCAL_STORAGE_PREFIX = 'tspg-app-';
+const RECENT = 'recent';
 
-let define = SystemJS.amdDefine;
-let __s = System;
-System = SystemJS
-${source}
-
-SystemJS.import('entry');
-System = __s;
-  </script>
-</html>
-`;
-}
-
-const RECENT_SOURCE = `ts-pg-recent`;
+interface ContainerProps { children?: JSX.Element | JSX.Element[]; }
+const Window = ({ children }: ContainerProps) => <div id="window">{children}</div>;
+const Toolbar = ({ children }: ContainerProps) => <div id="toolbar">{children}</div>;
+const Buffer = ({ children }: ContainerProps) => <div className="buffer">{children}</div>;
+const Buffers = ({ children }: ContainerProps) => <div id="buffers">{children}</div>;
 
 interface State {
   show: string;
@@ -63,11 +34,11 @@ interface State {
   diagnostics: TypeScript.Diagnostic[];
   html: string;
   css: string;
-  dependencies: { [key: string]: string };
   definitions: { [key: string]: string };
   semanticValidation: boolean;
   syntaxValidation: boolean;
   editorMounted: boolean;
+  authenticated: boolean;
 }
 
 class App extends Component<null, State> {
@@ -76,7 +47,6 @@ class App extends Component<null, State> {
     source: defaults.preactSource,
     css: defaults.css,
     html: defaults.html,
-    dependencies: defaults.dependencies,
     definitions: defaults.definitions,
     // This line disables errors in jsx tags like <div>, etc.
     syntaxValidation: false,
@@ -84,27 +54,33 @@ class App extends Component<null, State> {
     editorMounted: false,
     transpiled: '',
     diagnostics: [],
+    authenticated: false,
   };
 
-  c: Element;
+  async componentWillMount() {
+    this.authenticate();
+    this.setState({
+      source: this.loadSourceFromUrl() || this.loadSource() || this.state.source
+    });
+  }
 
-  componentWillMount() {
-    this.setState({ source: this.loadSourceFromUrl() || this.loadSource() || this.state.source });
-
-    // pastebin.createPaste('const square = x => x * x;');
+  async authenticate() {
+    this.setState({
+      authenticated: github.checkAuthentication() || await github.maybeAuthenticate()
+    });
   }
 
   loadSourceFromUrl() {
-    const source = window.location.search.length ? window.location.search.replace('?source=', '') : null;
-    return source ? lzs.decompressFromEncodedURIComponent(source) : null;
+    const source = location.getQueryStringParameter('source');
+    return source ? lzs.decompressFromEncodedURIComponent(source) : undefined;
   }
 
   loadSource() {
-    return localStorage.getItem(RECENT_SOURCE);
+    return storage.getStorageItem(LOCAL_STORAGE_PREFIX, RECENT);
   }
 
   saveSource(source: string) {
-    localStorage.setItem(RECENT_SOURCE, lzs.compress(source));
+    storage.setStorageItem(LOCAL_STORAGE_PREFIX, RECENT, source, moment().add(6, 'months').toDate());
   }
 
   shareUrl() {
@@ -112,19 +88,39 @@ class App extends Component<null, State> {
     return `${origin}${pathname}?source=${lzs.compressToEncodedURIComponent(this.state.source)}`;
   }
 
+  loadDefinition() {
+    // const { show } = this.state;
+    const packageName = prompt('Package name', 'react');
+    if (!packageName) {
+      return;
+    }
+    const definitionUrl = prompt('Definition url', 'https://unpkg.com/@types/react@15.0.20/index.d.ts');
+    if (!definitionUrl) {
+      return;
+    }
+    const definitions = this.state.definitions;
+    definitions[`${packageName}.d.ts`] = definitionUrl;
+    this.setState({ definitions });
+  }
+
   render() {
-    const { show } = this.state;
+    const { show, editorMounted } = this.state;
     return (
-      <div id="window">
-        <div id="toolbar">
-          <div>
+      <Window>
+        <Toolbar>
+          <IconButton
+            name="settings"
+            onClick={() => alert('Coming soon: persistent editor, layout, and compiler options!!')}
+          />
+          <IconButton name="content-save" onClick={() => this.saveSource(this.state.source)} />
+          <IconButton name="plus" onClick={() => this.loadDefinition()} />
+          <IconButton name="share" onClick={() => prompt('Share URL:', this.shareUrl())}/>
           <IconButton
             label="TypeScript"
             name="language-typescript"
             selected={this.state.show === 'code'}
             onClick={() => this.setState({ show: 'code' })}
           />
-          </div>
           <IconButton
             label="HTML"
             name="language-html5"
@@ -137,26 +133,11 @@ class App extends Component<null, State> {
             selected={this.state.show === 'css'}
             onClick={() => this.setState({ show: 'css' })}
           />
-          {/*
-          <IconButton
-            name="content-save"
-            onClick={() => this.saveSource(this.state.source)}
-          />
-          <IconButton
-            name="share"
-            onClick={() => prompt('Share URL:', this.shareUrl())}
-          />
-          <IconButton
-            name="code-tags-check"
-            onClick={() => this.setState({
-              semanticValidation: !this.state.semanticValidation,
-              syntaxValidation: !this.state.syntaxValidation,
-            })}
-          />
-          */}
-        </div>
-        <div id="buffers">
-          <div className="buffer">
+          <div className="spacer" />
+          <IconLink name="github-circle" url={github.GITHUB_OAUTH_URL} />
+        </Toolbar>
+        <Buffers>
+          <Buffer>
             {show === 'code' && (
               <TypeScriptEditor
                 code={this.state.source}
@@ -181,128 +162,14 @@ class App extends Component<null, State> {
                 onChange={css => this.setState({ css })}
               />
             )}
-          </div>
-          <div className="buffer">
-            {this.state.editorMounted && (
-              <iframe
-                className="surface"
-                srcDoc={getIFrameSource(
-                  this.state.transpiled,
-                  this.state.css,
-                  this.state.html,
-                  this.state.dependencies
-                )}
-                ref={c => {
-                  if (!this.c) {
-                    this.setState({ editorMounted: true });
-                  }
-                  this.c = c as Element;
-                }}
-              />
-            )}
-          </div>
-        </div>
-      </div>
+          </Buffer>
+          <Buffer>
+            {editorMounted && <RenderFrame code={this.state.transpiled} css={this.state.css} html={this.state.html} />}
+          </Buffer>
+        </Buffers>
+      </Window>
     );
   }
 }
 
 export default App;
-
-interface HTMLEditorProps {
-  code?: string;
-  editorDidMount?: (editor: monaco.editor.IEditor, mod: typeof monaco) => void;
-  onChange?: (code: string) => void;
-}
-
-class HTMLEditor extends Component<HTMLEditorProps, void> {
-  monaco: typeof monaco;
-
-  editor: monaco.editor.IEditor;
-
-  componentWillMount() {
-    this.codeChanged = debounce(this.codeChanged, 500);
-  }
-
-  codeChanged(code: string) {
-    const { onChange } = this.props;
-    if (onChange) {
-      onChange(code);
-    }
-  }
-
-  render() {
-    return (
-      <MonacoEditor
-        width="100%"
-        language="html"
-        defaultValue={this.props.code}
-        options={{
-          lineNumbers: 'on',
-          lineNumbersMinChars: 3,
-          theme: 'vs-dark',
-          // cursorBlinking: 'off',
-          automaticLayout: true,
-          wrappingIndent: 'same',
-          parameterHints: true,
-          formatOnType: true,
-          formatOnPaste: true,
-          tabCompletion: true,
-          folding: true,
-        }}
-        onChange={code => this.codeChanged(code)}
-        editorWillMount={monaco => this.monaco = monaco}
-        editorDidMount={editor => this.editor = editor}
-      />
-    );
-  }
-}
-
-interface CSSEditorProps {
-  code?: string;
-  editorDidMount?: (editor: monaco.editor.IEditor, mod: typeof monaco) => void;
-  onChange?: (code: string) => void;
-}
-
-class CSSEditor extends Component<CSSEditorProps, void> {
-  monaco: typeof monaco;
-
-  editor: monaco.editor.IEditor;
-
-  componentWillMount() {
-    this.codeChanged = debounce(this.codeChanged, 500);
-  }
-
-  codeChanged(code: string) {
-    const { onChange } = this.props;
-    if (onChange) {
-      onChange(code);
-    }
-  }
-
-  render() {
-    return (
-      <MonacoEditor
-        width="100%"
-        language="css"
-        defaultValue={this.props.code}
-        options={{
-          lineNumbers: 'on',
-          lineNumbersMinChars: 3,
-          theme: 'vs-dark',
-          // cursorBlinking: 'off',
-          automaticLayout: true,
-          wrappingIndent: 'same',
-          parameterHints: true,
-          formatOnType: true,
-          formatOnPaste: true,
-          tabCompletion: true,
-          folding: true,
-        }}
-        onChange={code => this.codeChanged(code)}
-        editorWillMount={monaco => this.monaco = monaco}
-        editorDidMount={editor => this.editor = editor}
-      />
-    );
-  }
-}

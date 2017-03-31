@@ -1,22 +1,14 @@
-import { h, Component/*, render*/ } from 'preact';
+import { h, Component } from 'preact';
+import { debounce } from 'lodash';
 import MonacoEditor from './MonacoEditor';
 import * as TypeScript from 'typescript';
-import * as compiler from './compiler';
-import { debounce } from 'lodash';
+import { compiler, storage } from '../utilities';
 
 interface References { [name: string]: string; }
 
 const LOCAL_STORAGE_PREFIX = 'tspg-cache-';
 
-const getStorageKey = (fragment: string) => `${LOCAL_STORAGE_PREFIX}${fragment}`;
-
-const getStorageItem = (fragment: string) =>
-  localStorage.getItem(getStorageKey(fragment));
-
-const setStorageItem = (fragment: string, value: string) =>
-  localStorage.setItem(getStorageKey(fragment), value);
-
-const notInStorage = (fragment: string) => !getStorageItem(fragment); // tslint:disable-line no-any
+const notInStorage = (fragment: string) => !storage.getStorageItem(LOCAL_STORAGE_PREFIX, fragment);
 
 interface Props {
   code?: string;
@@ -30,6 +22,8 @@ interface Props {
 export default class TypeScriptEditor extends Component<Props, void> {
   monaco: typeof monaco;
 
+  definitionSource: string[];
+
   compileSource(source: string) {
     const configuration = compiler.createConfiguration(source);
     const result = compiler.compile(configuration.sourceBundle, configuration.compilerOptions);
@@ -41,8 +35,12 @@ export default class TypeScriptEditor extends Component<Props, void> {
     return null;
   }
 
+  shouldComponentUpdate() {
+    return false;
+  }
+
   componentWillMount() {
-    this.load();
+    this.loadDefinitions();
     this.fixWebWorkers();
     if (this.props.code) {
       this.editorChanged(this.props.code);
@@ -50,22 +48,10 @@ export default class TypeScriptEditor extends Component<Props, void> {
     this.editorChanged = debounce(this.editorChanged, 500);
   }
 
-  async load() {
-    this.loadDefinitions();
-  }
-
-  async loadDefinitions() {
-    return Promise.all(
-      Object.keys(this.props.definitions).filter(notInStorage).map(key => {
-        if (this.props.definitions) {
-          return fetch(this.props.definitions[key])
-            .then(res => res.text())
-            .then(source => setStorageItem(key, source));
-        } else {
-          return undefined;
-        }
-      }).filter(Boolean)
-    );
+  componentWillReceiveProps(next: Props) {
+    if (this.monaco) {
+      this.addLanguageDefinitions(next.definitions);
+    }
   }
 
   fixWebWorkers() {
@@ -74,14 +60,40 @@ export default class TypeScriptEditor extends Component<Props, void> {
     };
   }
 
-  addLanguageDefinitions() {
+  async loadDefinitions(definitions?: References) {
+    definitions = definitions || this.props.definitions;
+    return Promise.all(
+      Object.keys(definitions).filter(notInStorage).map(key => {
+        if (definitions) {
+          return fetch(definitions[key])
+            .then(res => res.text())
+            .then(source => storage.setStorageItem(LOCAL_STORAGE_PREFIX, key, source));
+        } else {
+          return undefined;
+        }
+      }).filter(Boolean)
+    );
+  }
+
+  async addLanguageDefinitions(definitions?: References) {
+    definitions = definitions || this.props.definitions;
+    await this.loadDefinitions(definitions);
     const extraLibsKey = '_extraLibs';
     const typescriptDefaults = this.monaco.languages.typescript.typescriptDefaults;
-    Object.keys(this.props.definitions).forEach(key => {
+    Object.keys(definitions).forEach(key => {
       if (this.props.definitions && !typescriptDefaults[extraLibsKey][key]) {
-        typescriptDefaults.addExtraLib(getStorageItem(key) as string, key);
+        const lib = storage.getStorageItem(LOCAL_STORAGE_PREFIX, key) as string;
+        typescriptDefaults.addExtraLib(lib, key);
       }
     });
+  }
+
+  async editorMounted(editor: monaco.editor.IEditor, m: typeof monaco) {
+    this.monaco = m;
+    await this.addLanguageDefinitions();
+    if (this.props.editorDidMount) {
+      this.props.editorDidMount(editor, m);
+    }
   }
 
   editorChanged(code: string, event?: monaco.editor.IModelContentChangedEvent2) {
@@ -123,19 +135,8 @@ export default class TypeScriptEditor extends Component<Props, void> {
         requireConfig={requireConfig}
         onChange={(code, event) => this.editorChanged(code, event)}
         // editorWillMount={monaco => this.monaco = monaco}
-        editorDidMount={(editor, mod) => {
-          this.monaco = mod;
-          this.addLanguageDefinitions();
-          if (this.props.editorDidMount) {
-            this.props.editorDidMount(editor, mod);
-          }
-        }}
+        editorDidMount={(editor, m) => this.editorMounted(editor, m)}
         diagnosticOptions={this.props.diagnosticOptions}
-        // context={{
-        //   window: window,
-        //   preact: { render, h, Component },
-        //   container: this.container,
-        // }}
       />
     );
   }
