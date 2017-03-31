@@ -15,6 +15,7 @@ import TypeScriptEditor from './TypeScriptEditor';
 import * as TypeScript from 'typescript';
 import * as defaults from './defaults';
 import * as lzs from 'lz-string';
+// import * as pastebin from './pastebin';
 
 function getIFrameSource(source: string, css: string, dependencies: { [key: string]: string }) {
   return `
@@ -69,6 +70,8 @@ class App extends Component<null, State> {
 
   componentWillMount() {
     this.setState({ source: this.loadSourceFromUrl() || this.loadSource() || this.state.source });
+
+    // pastebin.createPaste('const square = x => x * x;');
   }
 
   loadSourceFromUrl() {

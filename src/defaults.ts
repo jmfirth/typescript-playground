@@ -104,6 +104,7 @@ export const dependencies = {
   'pixi.js': 'https://cdnjs.cloudflare.com/ajax/libs/pixi.js/4.4.3/pixi.min',
   'three.js': 'https://cdnjs.cloudflare.com/ajax/libs/three.js/84/three.min',
   regl: 'https://cdnjs.cloudflare.com/ajax/libs/regl/1.3.0/regl.min',
+  'gl-matrix': 'https://cdnjs.cloudflare.com/ajax/libs/gl-matrix/2.3.2/gl-matrix-min',
 };
 
 export const definitions = {
@@ -134,4 +135,5 @@ export const definitions = {
   'three-vreffect.d.ts': 'https://unpkg.com/@types/three@0.84.3/three-vreffect.d.ts',
   'pixi.js.d.ts': 'https://unpkg.com/@types/pixi.js@4.4.1/index.d.ts',
   'regl.d.ts': 'https://raw.githubusercontent.com/jmfirth/DefinitelyTyped/regl-support/types/regl/index.d.ts',
+  'gl-matrix.d.ts': 'https://unpkg.com/@types/gl-matrix@2.2.34/index.d.ts',
 };
