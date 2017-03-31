@@ -12,6 +12,7 @@ import {
 } from './components/index';
 import * as defaults from './defaults';
 import { storage, location, github } from './utilities';
+import * as examples from './examples/index';
 import 'material-design-icons/iconfont/material-icons.css';
 import 'mdi/css/materialdesignicons.css';
 import 'mdi/fonts/materialdesignicons-webfont.ttf';
@@ -44,9 +45,9 @@ interface State {
 class App extends Component<null, State> {
   state = {
     show: 'code',
-    source: defaults.preactSource,
-    css: defaults.css,
-    html: defaults.html,
+    source: examples.pixijs.code,
+    css: examples.pixijs.css,
+    html: examples.pixijs.html,
     definitions: defaults.definitions,
     // This line disables errors in jsx tags like <div>, etc.
     syntaxValidation: false,

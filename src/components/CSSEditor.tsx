@@ -1,6 +1,7 @@
 import { h, Component } from 'preact';
 import debounce = require('lodash/debounce');
 import MonacoEditor from './MonacoEditor';
+import { abilities } from '../utilities';
 
 interface CSSEditorProps {
   code?: string;
@@ -41,6 +42,7 @@ export default class CSSEditor extends Component<CSSEditorProps, void> {
           lineNumbers: 'on',
           lineNumbersMinChars: 3,
           theme: 'vs-dark',
+          fontSize: abilities.isMobile() ? 16 : 12,
           // cursorBlinking: 'off',
           automaticLayout: true,
           wrappingIndent: 'same',

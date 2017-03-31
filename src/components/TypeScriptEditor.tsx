@@ -2,7 +2,7 @@ import { h, Component } from 'preact';
 import { debounce } from 'lodash';
 import MonacoEditor from './MonacoEditor';
 import * as TypeScript from 'typescript';
-import { compiler, storage } from '../utilities';
+import { abilities, compiler, storage } from '../utilities';
 
 interface References { [name: string]: string; }
 
@@ -45,7 +45,7 @@ export default class TypeScriptEditor extends Component<Props, void> {
     if (this.props.code) {
       this.editorChanged(this.props.code);
     }
-    this.editorChanged = debounce(this.editorChanged, 500);
+    this.editorChanged = debounce(this.editorChanged, 1000);
   }
 
   componentWillReceiveProps(next: Props) {
@@ -123,6 +123,7 @@ export default class TypeScriptEditor extends Component<Props, void> {
           lineNumbers: 'on',
           lineNumbersMinChars: 3,
           theme: 'vs-dark',
+          fontSize: abilities.isMobile() ? 16 : 12,
           // cursorBlinking: 'off',
           automaticLayout: true,
           wrappingIndent: 'same',
