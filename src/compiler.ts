@@ -131,6 +131,11 @@ export interface CompilerResult {
 }
 
 export function createConfiguration(source: string) {
+  let jsxFactory = '';
+  const matches = source.match(/\/\*.*\s.*@jsx\s(..)\*.*\//);
+  if (matches && matches.length > 1) {
+    jsxFactory = matches[1].toString().trim();
+  }
   return  {
     sourceBundle: {
       entry: 'entry.tsx',
@@ -142,7 +147,7 @@ export function createConfiguration(source: string) {
       target: TypeScript.ScriptTarget.ES5,
       lib: ['es6', 'dom', 'node'],
       jsx: TypeScript.JsxEmit.React,
-      jsxFactory: 'h',
+      jsxFactory: !!jsxFactory ? 'h' : undefined,
       allowJs: true,
       maxNodeModuleJsDepth: 100,
       allowSyntheticDefaultImports: true,

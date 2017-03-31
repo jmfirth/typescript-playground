@@ -15,7 +15,6 @@ api_paste_format = ecmascript
 // const createPasteUrl: string = 'https://pastebin.com/api/api_post.php';
 // const loginUrl: string = 'https://pastebin.com/api/api_login.php';
 
-
 /*
 export async function login() {
   try {
@@ -25,7 +24,8 @@ export async function login() {
       'api_user_password': 'typescriptplayground1'
     };
     const body = Object.keys(options).map(key => `${key}=${options[key]}`).join('&');
-    const res = await fetch(loginUrl, { method: 'POST', mode: 'no-cors', body, headers: { 'content-type': 'application/x-www-form-urlencoded' } });
+    const res = await fetch(loginUrl,
+    { method: 'POST', mode: 'no-cors', body, headers: { 'content-type': 'application/x-www-form-urlencoded' } });
     const text = await res.text();
     console.log(text);
     debugger;
@@ -46,9 +46,11 @@ export async function createPaste(code: string) {
     };
     const body = Object.keys(options).map(key => `${key}=${options[key]}`).join('&');
     // await login();
-    // const res = await fetch(createPasteUrl, { method: 'POST', mode: 'no-cors', body, headers: { 'content-type': 'application/x-www-form-urlencoded' } });
+    // const res = await fetch(createPasteUrl,
+    { method: 'POST', mode: 'no-cors', body, headers: { 'content-type': 'application/x-www-form-urlencoded' } });
     // const text = await res.text();
-    fetch(createPasteUrl, { method: 'POST', mode: 'cors', body, headers: { 'content-type': 'application/x-www-form-urlencoded' } })
+    fetch(createPasteUrl,
+    { method: 'POST', mode: 'cors', body, headers: { 'content-type': 'application/x-www-form-urlencoded' } })
       .then(res => res.arrayBuffer())
       .then(blob => { debugger; });
   } catch (e) {

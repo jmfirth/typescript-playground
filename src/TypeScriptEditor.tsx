@@ -75,9 +75,11 @@ export default class TypeScriptEditor extends Component<Props, void> {
   }
 
   addLanguageDefinitions() {
+    const extraLibsKey = '_extraLibs';
+    const typescriptDefaults = this.monaco.languages.typescript.typescriptDefaults;
     Object.keys(this.props.definitions).forEach(key => {
-      if (this.props.definitions) {
-        this.monaco.languages.typescript.typescriptDefaults.addExtraLib(getStorageItem(key) as string, key);
+      if (this.props.definitions && !typescriptDefaults[extraLibsKey][key]) {
+        typescriptDefaults.addExtraLib(getStorageItem(key) as string, key);
       }
     });
   }

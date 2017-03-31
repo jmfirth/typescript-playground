@@ -1,15 +1,10 @@
 export const preactSource = `
+/** @jsx h */
 import { h, Component, render } from 'preact';
-import * as PIXI from 'pixi.js';
 
 class HelloWorld extends Component<void, void> {
   render() {
-    return (
-      <div>
-        <h1>Hello world!</h1>
-
-      </div>
-    );
+    return <h1>Hello world!</h1>;
   }
 }
 
@@ -91,6 +86,8 @@ function drawRect(tick: number) {
 
 start(document.body);
 `;
+
+export const html = '';
 
 export const css = `
 html, body {
