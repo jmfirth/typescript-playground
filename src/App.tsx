@@ -37,26 +37,9 @@ ${css}
 ${html}
   </body>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/systemjs/0.20.11/system.js"></script>
-  <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/typescript/2.2.2/typescript.min.js"></script> -->
   <script>
 SystemJS.config({
   baseURL: 'http://browserify-cdn.abstractsequential.com:8080/standalone/',
-  // baseURL: 'https://wzrd.in/standalone/',
-  // baseURL: 'https://cdnjs.cloudflare.com/ajax/libs/',
-  // baseURL: 'https://unpkg.com/',
-  // transpiler: 'typescript',
-  // packages: {
-  //   src: {
-  //     defaultExtension: 'ts'
-  //   }
-  // },
-  paths: {
-    // 'lodash/': 'https://unpkg.com/lodash/',
-    // 'preact': 'https://cdnjs.cloudflare.com/ajax/libs/preact/7.2.1/preact.min.js',
-    // 'pixi.js': 'https://cdnjs.cloudflare.com/ajax/libs/pixi.js/4.4.3/pixi.js',
-    // 'three.js': 'https://cdnjs.cloudflare.com/ajax/libs/three.js/84/three.min.js',
-    // 'gl-matrix': 'https://cdnjs.cloudflare.com/ajax/libs/gl-matrix/2.3.2/gl-matrix-min.js'
-  }
 });
 
 let define = SystemJS.amdDefine;
