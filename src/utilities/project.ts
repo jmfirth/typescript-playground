@@ -1,4 +1,4 @@
-import * as github from './github';
+import * as Github from './github';
 import * as defaults from '../defaults';
 
 export interface Project {
@@ -27,7 +27,7 @@ export function createNewProject(
     type: 'local',
     id: undefined,
     ownerId: undefined,
-    description: 'TypeScript Playground web project',
+    description: 'TypeScript Playground Project',
     public: isPublic,
     definitions,
     files: {
@@ -38,18 +38,26 @@ export function createNewProject(
   } as Project;
 }
 
-export function createProjectFromGist(gist: github.Gist): Project {
+export function createProjectFromGist(gist: Github.Gist): Project {
+  let files = gist.files;
+  const definitions = files['definitions.json'] ? JSON.parse(files['definitions.json'].content) : defaults.definitions;
+  if (definitions) {
+    const fb = new Github.GistFilesBuilder(gist.files);
+    fb.removeFile('definitions.json');
+    files = fb.toFiles();
+  }
   return {
     type: 'gist',
     id: gist.id,
     ownerId: gist.owner.id ? gist.owner.id.toString() : undefined,
     description: gist.description,
+    definitions,
     public: gist.public,
-    files: gist.files
+    files: files
   } as Project;
 }
 
-// export function createGistDescriptionFromProject(project: Project): github.GistDescription {
+// export function createGistDescriptionFromProject(project: Project): Github.GistDescription {
 //   return {
 //     description: project.description,
 //     public: project.public,

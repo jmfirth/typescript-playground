@@ -200,6 +200,12 @@ export interface GistFiles { [fileName: string]: GistFile; }
 export class GistFilesBuilder {
   files: GistFiles = {};
 
+  constructor(files?: GistFiles) {
+    if (files) {
+      this.files = files;
+    }
+  }
+
   toFiles = () => this.files;
 
   addFile = (fileName: string, content: string = '') => content && (this.files[fileName] = { content });
@@ -207,20 +213,44 @@ export class GistFilesBuilder {
   removeFile = (fileName: string) => delete this.files[fileName];
 }
 
-export async function createGist(description: string, files: GistFiles, isPublic: boolean = true) {
+export async function createGist(
+  description: string,
+  files: GistFiles,
+  definitions: { [moduleName: string]: string },
+  isPublic: boolean = true,
+) {
   if (!accessToken) { return; }
-  const data = { description, files, public: isPublic };
+  const fb = new GistFilesBuilder(files);
+  fb.addFile('definitions.json', JSON.stringify(definitions));
+  const data = { description, files: fb.toFiles(), public: isPublic };
   try {
     const res = await fetch('https://api.github.com/gists', {
       method: 'POST',
       headers: getAuthorizationHeader(),
       body: JSON.stringify(data)
     });
-    return await res.json() as Gist;
+    const gist = await res.json() as Gist;
+    try {
+      const url = `https://jmfirth.github.io/typescript-playground/?gistId=${gist.id}`;
+      await addCommentToGist(gist.id, `View this in the [TypeScript Playground](${url}).`);
+    } catch (f) {
+      alert('Was not able to add TypeScript Playground url as a comment to the new gist');
+    }
+    return gist;
   } catch (e) {
     alert('Error creating gist');
     return;
   }
+}
+
+export async function addCommentToGist(gistId: string, body: string) {
+  if (!accessToken) { return; }
+  const res = await fetch(`https://api.github.com/gists/${gistId}/comments`, {
+    method: 'POST',
+    headers: getAuthorizationHeader(),
+    body: JSON.stringify({ body }),
+  });
+  return await res.json();
 }
 
 export async function updateGist(gistId: string, description: string, files: GistFiles) {

@@ -30,7 +30,13 @@ interface SimpleContainerProps { children?: JSX.Element | JSX.Element[]; }
 const Container = ({ children }: SimpleContainerProps) => <div id="container">{children}</div>;
 const Toolbar = ({ children }: SimpleContainerProps) => <div id="toolbar">{children}</div>;
 const Buffer = ({ children }: SimpleContainerProps) => <div className="buffer">{children}</div>;
-const Buffers = ({ children }: SimpleContainerProps) => <div id="buffers">{children}</div>;
+
+interface BufferProps {
+  split?: boolean;
+  children?: JSX.Element | JSX.Element[];
+}
+const Buffers = ({ split, children }: BufferProps) =>
+  <div id="buffers" className={split ? 'buffers-split' : undefined}>{children}</div>;
 
 interface State {
   loaded: boolean;
@@ -42,6 +48,8 @@ interface State {
   editorMounted: boolean;
   authenticated: boolean;
   sidebarOpen: boolean;
+  showCodeFrame: boolean;
+  showRenderFrame: boolean;
   user?: Github.GithubAuthenticatedUser;
   project?: Project.Project;
 }
@@ -57,6 +65,8 @@ class App extends Component<null, State> {
     sidebarOpen: false,
     user: undefined,
     project: undefined,
+    showRenderFrame: true,
+    showCodeFrame: true,
     // This line disables errors in jsx tags like <div>, etc.
     syntaxValidation: false,
     semanticValidation: false,
@@ -139,7 +149,7 @@ class App extends Component<null, State> {
       }
       const defaultDescription = 'From TypeScript Playground';
       const description = prompt('Description of gist', defaultDescription) || defaultDescription;
-      const gist = await Github.createGist(description, this.state.project.files);
+      const gist = await Github.createGist(description, this.state.project.files, this.state.project.definitions);
       if (!gist) {
         throw new Error('Could not create a Gist.  If Github status is fine, we are sorry!  Please file an issue.');
       }
@@ -160,8 +170,7 @@ class App extends Component<null, State> {
       if (!current || !current.id) {
         throw new Error('Fatal error: project not found.  Please copy your source and reload.');
       }
-      const description = prompt('Description of gist', current.description) || current.description;
-      const gist = await Github.updateGist(current.id, description, current.files);
+      const gist = await Github.updateGist(current.id, current.description, current.files);
       if (!gist) {
         throw new Error('Could not create a Gist.  If Github status is fine, we are sorry!  Please file an issue.');
       }
@@ -182,8 +191,16 @@ class App extends Component<null, State> {
     return project ? `${origin}${pathname}?gistId=${project.id}` : `${origin}${pathname}`;
   }
 
+  onDescriptionInput(e: Event) {
+    const project = this.state.project;
+    if (project) {
+      project.description = (e.target as HTMLDivElement).innerText;
+      this.setState({ project });
+    }
+  }
+
   render() {
-    const { loaded, show, editorMounted, project } = this.state;
+    const { authenticated, loaded, show, showRenderFrame, showCodeFrame, editorMounted, project } = this.state;
     return (
       <Window sidebarOpen={this.state.sidebarOpen}>
         {/*<Sidebar>
@@ -204,15 +221,41 @@ class App extends Component<null, State> {
               name="menu"
               onClick={() => this.setState({ sidebarOpen: !this.state.sidebarOpen })}
             />*/}
+            <div
+              className="toolbar-title is-contenteditable"
+              contentEditable={true}
+              onInput={(e) => this.onDescriptionInput(e)}
+            >
+              {this.state.project && this.state.project.description}
+            </div>
             <div className="spacer" />
-            <IconButton name="content-save" onClick={() => this.saveOrUpdateGist()} />
-            <IconButton name="plus" onClick={() => this.loadDefinition()} />
-            <IconButton name="share" onClick={() => prompt('Share URL:', this.shareUrl())}/>
             <IconButton
+              tooltip="Add TypeScript Definition"
+              name="plus"
+              onClick={() => this.loadDefinition()}
+            />
+            {authenticated && (
+              <IconButton
+                tooltip="Save Gist"
+                name="content-save"
+                onClick={() => this.saveOrUpdateGist()}
+              />
+            )}
+            {project && project.id && (
+              <IconButton
+                tooltip="Create Share Link"
+                name="share"
+                onClick={() => prompt('Share URL:', this.shareUrl())}
+              />
+            )}
+            {!authenticated &&
+              <IconLink tooltip="Login to Github" name="github-circle" url={Github.GITHUB_OAUTH_URL} />
+            }
+            {/*<IconButton
+              tooltip="Settings"
               name="settings"
               onClick={() => alert('Coming soon: persistent editor, layout, and compiler options!!')}
-            />
-            <IconLink name="github-circle" url={Github.GITHUB_OAUTH_URL} />
+            />*/}
           </Toolbar>
           <Toolbar>
             <IconButton
@@ -236,56 +279,73 @@ class App extends Component<null, State> {
               selected={this.state.show === 'css'}
               onClick={() => this.setState({ show: 'css' })}
             />
+            <div class="spacer" />
+            <IconButton
+              tooltip={`${showCodeFrame ? 'Hide' : 'Show'} code frame`}
+              name="code-tags"
+              className={showCodeFrame ? 'toolbar-icon--enabled' : undefined}
+              onClick={() => this.setState({ showCodeFrame: !showCodeFrame})}
+            />
+            <IconButton
+              tooltip={`${showRenderFrame ? 'Hide' : 'Show'} render frame`}
+              name="eye-outline"
+              className={showRenderFrame ? 'toolbar-icon--enabled' : undefined}
+              onClick={() => this.setState({ showRenderFrame: !showRenderFrame })}
+            />
           </Toolbar>
           {loaded && project && (
-            <Buffers>
-              <Buffer>
-                {show === 'code' && (
-                  <TypeScriptEditor
-                    code={project.files['index.tsx'] ? project.files['index.tsx'].content : ''}
-                    onChange={(source, transpiled, diagnostics) => {
-                      project.files['index.tsx'] = project.files['index.tsx'] || {};
-                      project.files['index.tsx'].content = source;
-                      this.setState({ project, transpiled: transpiled || '' });
-                    }}
-                    diagnosticOptions={{
-                      noSemanticValidation: !this.state.semanticValidation,
-                      noSyntaxValidation: !this.state.syntaxValidation,
-                    }}
-                    definitions={project.definitions}
-                    editorDidMount={() => this.setState({ editorMounted: true })}
-                  />
-                )}
-                {show === 'html' && (
-                  <HTMLEditor
-                    code={project.files['index.html'] ? project.files['index.html'].content : ''}
-                    onChange={html => {
-                      project.files['index.html'] = project.files['index.html'] || {};
-                      project.files['index.html'].content = html;
-                      this.setState({ project });
-                    }}
-                  />
-                )}
-                {show === 'css' && (
-                  <CSSEditor
-                    code={project.files['style.css'] ? project.files['style.css'].content : ''}
-                    onChange={css => {
-                      project.files['style.css'] = project.files['style.css'] || {};
-                      project.files['style.css'].content = css;
-                      this.setState({ project });
-                    }}
-                  />
-                )}
-              </Buffer>
-              <Buffer>
-                {editorMounted && project && (
-                  <RenderFrame
-                    code={this.state.transpiled}
-                    html={project.files['index.html'] ? project.files['index.html'].content : ''}
-                    css={project.files['style.css'] ? project.files['style.css'].content : ''}
-                  />
-                )}
-              </Buffer>
+            <Buffers split={showCodeFrame && showRenderFrame}>
+              {showCodeFrame && (
+                <Buffer>
+                  {show === 'code' && (
+                    <TypeScriptEditor
+                      code={project.files['index.tsx'] ? project.files['index.tsx'].content : ''}
+                      onChange={(source, transpiled, diagnostics) => {
+                        project.files['index.tsx'] = project.files['index.tsx'] || {};
+                        project.files['index.tsx'].content = source;
+                        this.setState({ project, transpiled: transpiled || '' });
+                      }}
+                      diagnosticOptions={{
+                        noSemanticValidation: !this.state.semanticValidation,
+                        noSyntaxValidation: !this.state.syntaxValidation,
+                      }}
+                      definitions={project.definitions}
+                      editorDidMount={() => this.setState({ editorMounted: true })}
+                    />
+                  )}
+                  {show === 'html' && (
+                    <HTMLEditor
+                      code={project.files['index.html'] ? project.files['index.html'].content : ''}
+                      onChange={html => {
+                        project.files['index.html'] = project.files['index.html'] || {};
+                        project.files['index.html'].content = html;
+                        this.setState({ project });
+                      }}
+                    />
+                  )}
+                  {show === 'css' && (
+                    <CSSEditor
+                      code={project.files['style.css'] ? project.files['style.css'].content : ''}
+                      onChange={css => {
+                        project.files['style.css'] = project.files['style.css'] || {};
+                        project.files['style.css'].content = css;
+                        this.setState({ project });
+                      }}
+                    />
+                  )}
+                </Buffer>
+              )}
+              {showRenderFrame && (
+                <Buffer>
+                  {editorMounted && project && (
+                    <RenderFrame
+                      code={this.state.transpiled}
+                      html={project.files['index.html'] ? project.files['index.html'].content : ''}
+                      css={project.files['style.css'] ? project.files['style.css'].content : ''}
+                    />
+                  )}
+                </Buffer>
+              )}
             </Buffers>
           )}
         </Container>

@@ -6,10 +6,14 @@ interface IconButtonProps {
   name: string;
   url?: string;
   selected?: boolean;
+  tooltip?: string;
 }
 
-export default ({ label, name, url, selected }: IconButtonProps) => (
-  <a className={`button ${selected ? 'button-selected' : ''}`} href={url}>
-    <Icon name={name} /> {label}
-  </a>
+export default ({ label, name, url, selected, tooltip }: IconButtonProps) => (
+  <div className={tooltip ? 'tooltip' : ''}>
+    <a className={`button ${selected ? 'button-selected' : ''}`} href={url}>
+      <Icon name={name} /> {label}
+    </a>
+    {tooltip && <span className="tooltiptext tooltiptext-left">{tooltip}</span>}
+  </div>
 );

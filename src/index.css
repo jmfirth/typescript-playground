@@ -75,8 +75,16 @@ body {
 }
 .toolbar-title {
   font-size: 14px;
+  padding: 5px;
   color: #999;
   margin-left: 10px;
+}
+.toolbar-title.is-contenteditable:hover {
+  /*border: 2px dashed #666;*/
+  outline: #666 solid 2px;
+}
+.toolbar-title.is-contenteditable:focus {
+  outline: #666 solid 2px;
 }
 .toolbar-item {
   color: #fefefe;
@@ -99,6 +107,9 @@ body {
   padding-bottom: 6px !important;
   margin-bottom: -6px;
 }
+.toolbar-icon--enabled i {
+  color: yellow;
+}
 
 #buffers {
   width: 100%;
@@ -106,11 +117,16 @@ body {
 }
 .buffer {
   display: inline-block;
+  width: 100%;
+  height: 100%;
+}
+#buffers.buffers-split .buffer {
+  display: inline-block;
   width: 50%;
   height: 100%;
 }
 @media screen and (orientation:portrait) {
-  .buffer {
+  #buffers.buffers-split .buffer {
     width: 100%;
     height: 50%;
   }
@@ -153,4 +169,52 @@ body {
   display: flex;
   flex: 1;
   flex-grow: 1;
+}
+
+
+
+.tooltip {
+    position: relative;
+    display: inline-block;
+    /* border-bottom: 1px dotted white; /* If you want dots under the hoverable text */
+}
+/* Tooltip text */
+.tooltip .tooltiptext {
+    font-size: 1rem;
+    visibility: hidden;
+    width: 200px;
+    background-color: #999;
+    color: black;
+    text-align: center;
+    padding: 5px 0;
+    border-radius: 6px;
+
+    /* Position the tooltip text - see examples below! */
+    position: absolute;
+    z-index: 1;
+}
+
+/* Show the tooltip text when you mouse over the tooltip container */
+.tooltip:hover .tooltiptext {
+    visibility: visible;
+}
+.tooltip .tooltiptext.tooltiptext-right {
+    top: -1px;
+    left: 105%;
+}
+.tooltip .tooltiptext.tooltiptext-left {
+    top: -1px;
+    right: 105%;
+}
+.tooltip .tooltiptext.tooltiptext-top {
+    width: 120px;
+    bottom: 100%;
+    left: 50%;
+    margin-left: -60px; /* Use half of the width (120/2 = 60), to center the tooltip */
+}
+.tooltip .tooltiptext.tooltiptext-bottom {
+    width: 120px;
+    top: 100%;
+    left: 50%;
+    margin-left: -60px; /* Use half of the width (120/2 = 60), to center the tooltip */
 }
