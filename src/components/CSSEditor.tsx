@@ -42,7 +42,7 @@ export default class CSSEditor extends Component<CSSEditorProps, void> {
           lineNumbers: 'on',
           lineNumbersMinChars: 3,
           theme: 'vs-dark',
-          fontSize: abilities.isMobile() ? 16 : 12,
+          fontSize: abilities.isMobile() ? 16 : 13,
           // cursorBlinking: 'off',
           automaticLayout: true,
           wrappingIndent: 'same',

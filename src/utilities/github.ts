@@ -3,15 +3,16 @@ import * as storage from './storage';
 import * as location from './location';
 
 const LOCAL_STORAGE_PREFIX = 'tspg-app-';
-const ACCESS_TOKEN = 'accessToken';
 
-let accessToken = storage.getStorageItem(LOCAL_STORAGE_PREFIX, ACCESS_TOKEN);
+const ACCESS_TOKEN = 'accessToken';
 
 const CLIENT_ID = '0138dec573cf22322bb3';
 
 const REDIRECT_URI = `${window.location.origin}${window.location.pathname}`;
 
 const SCOPES = 'user:email,gist';
+
+let accessToken = storage.getStorageItem(LOCAL_STORAGE_PREFIX, ACCESS_TOKEN);
 
 export const GITHUB_OAUTH_URL =
   `https://github.com/login/oauth/authorize?client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&scope=${SCOPES}`;
@@ -31,6 +32,8 @@ export async function maybeAuthenticate() {
       console.info('Github authentication successful.', accessToken);
       return true;
     } else {
+      accessToken = undefined;
+      storage.removeStorageItem(LOCAL_STORAGE_PREFIX, ACCESS_TOKEN);
       alert('Github authentication failed');
     }
   }
@@ -41,10 +44,197 @@ async function getAccessToken(code: string) {
   try {
     const res = await fetch(`https://gatekeeper.abstractsequential.com/authenticate/${code}`);
     const json = await res.json();
-    accessToken = json.token as string;
+    return json.token as string;
   } catch (e) {
-    accessToken = '';
     alert('Error authenticating with Github');
+    return;
+  }
+}
+
+function getAuthorizationHeader() {
+  return { 'Authorization': `token ${accessToken}` };
+}
+
+export async function getUser() {
+  if (!accessToken) { return; }
+  try {
+    const res = await fetch('https://api.github.com/user', { headers: getAuthorizationHeader() });
+    return await res.json() as GithubAuthenticatedUser;
+  } catch (e) {
+    alert('Error retrieving user');
+    return;
+  }
+}
+
+export async function listGists(username?: string) {
+  if (!accessToken) { return; }
+  const url = `https://api.github.com${username ? `/users/${username}` : ''}/gists`;
+  try {
+    const res = await fetch(url, { headers: getAuthorizationHeader() });
+    return await res.json();
+  } catch (e) {
+    alert('Error retrieving user');
+    return;
+  }
+}
+
+export async function getGist(id: string, rev?: string) {
+  try {
+    const res = await fetch(`https://api.github.com/gists/${id}${rev ? `/${rev}` : ''}`);
+    return await res.json() as Gist;
+  } catch (e) {
+    alert('Error fetching gist');
+    return;
+  }
+}
+
+export async function getFile(url: string) {
+  const res = await fetch(url);
+  return await res.text();
+}
+
+export interface GithubUserInfo {
+  login: string;
+  id: number;
+  avatar_url: string;
+  gravatar_id: string;
+  url: string;
+  html_url: 'string';
+  followers_url: string;
+  following_url: string;
+  gists_url: string;
+  starred_url: string;
+  subscriptions_url: string;
+  organizations_url: string;
+  repos_url: string;
+  events_url: string;
+  received_events_url: string;
+  type: string;
+  side_admin: boolean;
+}
+
+export interface GithubUser extends GithubUserInfo {
+  name: string;
+  company: string;
+  blog: string;
+  location: string;
+  email: string;
+  hireable: boolean;
+  bio: string;
+  public_repos: number;
+  public_gists: number;
+  followers: number;
+  following: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface GithubAuthenticatedUser extends GithubUser {
+  total_private_repos: number;
+  owned_private_repos: number;
+  private_gists: number;
+  disk_usage: number;
+  collaborators: number;
+  two_factor_authentication: boolean;
+  plan: {
+    name: string;
+    space: number;
+    private_repos: number;
+    collaborators: number;
+  };
+}
+
+export interface GistFork {
+  user: GithubUser;
+  url: string;
+  id: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface GistHistory {
+  url: string;
+  version: string;
+  user: GithubUserInfo;
+  change_status: {
+    deletions: number;
+    additions: number;
+    total: number;
+  };
+  committed_at: string;
+}
+
+export interface GistDescription {
+  description: string;
+  public: boolean;
+  files: GistFiles;
+}
+
+export interface Gist extends GistDescription {
+  url: string;
+  forks_url: string;
+  commits_url: string;
+  id: string;
+  owner: GithubUserInfo;
+  user?: string;
+  truncated: boolean;
+  comments: number;
+  comments_url: string;
+  html_url: string;
+  git_pull_url: string;
+  git_push_url: string;
+  created_at: string;
+  updated_at: string;
+  forks: GistFork[];
+  history: GistHistory[];
+
+}
+
+export interface GistFile {
+  content: string;
+  filename?: string;
+}
+
+export interface GistFiles { [fileName: string]: GistFile; }
+
+export class GistFilesBuilder {
+  files: GistFiles = {};
+
+  toFiles = () => this.files;
+
+  addFile = (fileName: string, content: string = '') => content && (this.files[fileName] = { content });
+
+  removeFile = (fileName: string) => delete this.files[fileName];
+}
+
+export async function createGist(description: string, files: GistFiles, isPublic: boolean = true) {
+  if (!accessToken) { return; }
+  const data = { description, files, public: isPublic };
+  try {
+    const res = await fetch('https://api.github.com/gists', {
+      method: 'POST',
+      headers: getAuthorizationHeader(),
+      body: JSON.stringify(data)
+    });
+    return await res.json() as Gist;
+  } catch (e) {
+    alert('Error creating gist');
+    return;
+  }
+}
+
+export async function updateGist(gistId: string, description: string, files: GistFiles) {
+  if (!accessToken) { return; }
+  const data = { description, files };
+  try {
+    const res = await fetch(`https://api.github.com/gists/${gistId}`, {
+      method: 'PATCH',
+      headers: getAuthorizationHeader(),
+      body: JSON.stringify(data)
+    });
+    return await res.json() as Gist;
+  } catch (e) {
+    alert('Error updating gist');
     return;
   }
 }

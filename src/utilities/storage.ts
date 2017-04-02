@@ -33,3 +33,6 @@ export const getStorageItem = (prefix: string, fragment: string) => {
 
 export const setStorageItem = (prefix: string, fragment: string, body: Serializable, expires?: Date) =>
   localStorage.setItem(getStorageKey(prefix, fragment), compress(createWrapper(body, expires)));
+
+export const removeStorageItem = (prefix: string, fragment: string) =>
+  localStorage.removeItem(getStorageKey(prefix, fragment));
