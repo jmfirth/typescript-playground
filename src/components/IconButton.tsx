@@ -11,10 +11,10 @@ interface IconButtonProps {
 }
 
 export default ({ label, name, onClick, selected, tooltip, className }: IconButtonProps) => (
-  <div className={tooltip ? 'tooltip' : undefined}>
+  <div className={`${tooltip ? 'tooltip' : ''} ${className || ''}`}>
     <button
       // title={tooltip}
-      className={`button ${selected ? 'button-selected' : ''} ${className || ''}`}
+      className={`button ${selected ? 'button-selected' : ''}`}
       onClick={onClick}
     >
       <Icon name={name} /> {label}

@@ -18,12 +18,52 @@ const RECENT = 'recent';
 interface WindowProps {
   sidebarOpen?: boolean;
   children?: JSX.Element | JSX.Element[];
+  autohideToolbar?: boolean;
 }
-const Window = ({ children, sidebarOpen }: WindowProps) => (
-  <div id="window" className={sidebarOpen ? 'sidebar-open' : undefined}>
+interface WindowState {
+  mouseAtTop: boolean;
+}
+/*
+const Window = ({ autohideToolbar, children, sidebarOpen }: WindowProps) => (
+  <div
+    id="window"
+    className={`${sidebarOpen ? 'sidebar-open' : undefined} ${autohideToolbar ? 'autohide-toolbar' : ''}`}
+  >
     {children}
   </div>
 );
+*/
+class Window extends Component<WindowProps, WindowState> {
+  state: WindowState = {
+    mouseAtTop: false,
+  };
+
+  handleMouseMove(e: MouseEvent) {
+    if (!this.props.autohideToolbar) { return; }
+    if (!this.state.mouseAtTop && e.clientY < 30) {
+      console.log('mouse at top');
+      this.setState({ mouseAtTop: true });
+    } else if (this.state.mouseAtTop && e.clientY > 90) {
+      console.log('mouse not at top');
+      this.setState({ mouseAtTop: false });
+    }
+  }
+
+  render() {
+    const { autohideToolbar, children, sidebarOpen } = this.props;
+    const { mouseAtTop } = this.state;
+    return (
+      <div
+        id="window"
+        className={`${sidebarOpen ? 'sidebar-open' : ''} ${autohideToolbar ? 'autohide-toolbar' : ''} ${mouseAtTop ? 'autohide-toolbar--show' : ''}`}
+        onMouseMove={(e: MouseEvent) => this.handleMouseMove(e)}
+      >
+        {children}
+      </div>
+    );
+  }
+}
+
 
 interface SimpleContainerProps { children?: JSX.Element | JSX.Element[]; }
 // const Sidebar = ({ children }: SimpleContainerProps) => <div id="sidebar">{children}</div>;
@@ -48,6 +88,7 @@ interface State {
   editorMounted: boolean;
   authenticated: boolean;
   sidebarOpen: boolean;
+  autohideToolbar: boolean;
   showCodeFrame: boolean;
   showRenderFrame: boolean;
   user?: Github.GithubAuthenticatedUser;
@@ -65,6 +106,7 @@ class App extends Component<null, State> {
     sidebarOpen: false,
     user: undefined,
     project: undefined,
+    autohideToolbar: false,
     showRenderFrame: true,
     showCodeFrame: true,
     // This line disables errors in jsx tags like <div>, etc.
@@ -200,9 +242,12 @@ class App extends Component<null, State> {
   }
 
   render() {
-    const { authenticated, loaded, show, showRenderFrame, showCodeFrame, editorMounted, project } = this.state;
+    const {
+      authenticated, loaded, show, sidebarOpen, autohideToolbar, showRenderFrame, showCodeFrame,
+      editorMounted, project, semanticValidation, syntaxValidation,
+    } = this.state;
     return (
-      <Window sidebarOpen={this.state.sidebarOpen}>
+      <Window sidebarOpen={sidebarOpen} autohideToolbar={autohideToolbar}>
         {/*<Sidebar>
           <Toolbar>
             <div className="toolbar-title">Explorer</div>
@@ -216,83 +261,103 @@ class App extends Component<null, State> {
           <div id="sidebar-content" />
         </Sidebar>*/}
         <Container>
-          <Toolbar>
-            {/*<IconButton
-              name="menu"
-              onClick={() => this.setState({ sidebarOpen: !this.state.sidebarOpen })}
-            />*/}
-            <div
-              className="toolbar-title is-contenteditable"
-              contentEditable={true}
-              onInput={(e) => this.onDescriptionInput(e)}
-            >
-              {this.state.project && this.state.project.description}
-            </div>
-            <div className="spacer" />
-            <IconButton
-              tooltip="Add TypeScript Definition"
-              name="plus"
-              onClick={() => this.loadDefinition()}
-            />
-            {authenticated && (
+          <div id="toolbar-container">
+            <Toolbar>
+              {/*<IconButton
+                name="menu"
+                onClick={() => this.setState({ sidebarOpen: !sidebarOpen })}
+              />*/}
+              <div
+                className="toolbar-title is-contenteditable"
+                contentEditable={true}
+                onInput={(e) => this.onDescriptionInput(e)}
+              >
+                {project && project.description}
+              </div>
+              <div className="spacer" />
               <IconButton
-                tooltip="Save Gist"
-                name="content-save"
-                onClick={() => this.saveOrUpdateGist()}
+                tooltip="Add TypeScript Definition"
+                name="plus"
+                onClick={() => this.loadDefinition()}
               />
-            )}
-            {project && project.id && (
+              {authenticated && (
+                <IconButton
+                  tooltip="Save Gist"
+                  name="content-save"
+                  onClick={() => this.saveOrUpdateGist()}
+                />
+              )}
+              {project && project.id && (
+                <IconButton
+                  tooltip="Create Share Link"
+                  name="share"
+                  onClick={() => prompt('Share URL:', this.shareUrl())}
+                />
+              )}
+              {!authenticated &&
+                <IconLink tooltip="Login to Github" name="github-circle" url={Github.GITHUB_OAUTH_URL} />
+              }
+              {/*<IconButton
+                tooltip="Settings"
+                name="settings"
+                onClick={() => alert('Coming soon: persistent editor, layout, and compiler options!!')}
+              />*/}
+            </Toolbar>
+            <Toolbar>
+              {showCodeFrame && (
+                <IconButton
+                  className="toolbar-tab"
+                  label="TypeScript"
+                  name="language-typescript"
+                  selected={this.state.show === 'code'}
+                  onClick={() => this.setState({ show: 'code' })}
+                />
+              )}
+              {showCodeFrame && (
+                <IconButton
+                  className="toolbar-tab"
+                  label="HTML"
+                  name="language-html5"
+                  selected={this.state.show === 'html'}
+                  onClick={() => this.setState({ show: 'html' })}
+                />
+              )}
+              {showCodeFrame && (
+                <IconButton
+                  className="toolbar-tab"
+                  label="CSS"
+                  name="language-css3"
+                  selected={this.state.show === 'css'}
+                  onClick={() => this.setState({ show: 'css' })}
+                />
+              )}
+              <div class="spacer" />
               <IconButton
-                tooltip="Create Share Link"
-                name="share"
-                onClick={() => prompt('Share URL:', this.shareUrl())}
+                tooltip={`${autohideToolbar ? 'Disable' : 'Enable'} toolbar auto-hide`}
+                name="fullscreen"
+                className={autohideToolbar ? 'toolbar-icon--enabled' : undefined}
+                onClick={() => showCodeFrame && this.setState({ autohideToolbar: !autohideToolbar})}
               />
-            )}
-            {!authenticated &&
-              <IconLink tooltip="Login to Github" name="github-circle" url={Github.GITHUB_OAUTH_URL} />
-            }
-            {/*<IconButton
-              tooltip="Settings"
-              name="settings"
-              onClick={() => alert('Coming soon: persistent editor, layout, and compiler options!!')}
-            />*/}
-          </Toolbar>
-          <Toolbar>
-            <IconButton
-              className="toolbar-tab"
-              label="TypeScript"
-              name="language-typescript"
-              selected={this.state.show === 'code'}
-              onClick={() => this.setState({ show: 'code' })}
-            />
-            <IconButton
-              className="toolbar-tab"
-              label="HTML"
-              name="language-html5"
-              selected={this.state.show === 'html'}
-              onClick={() => this.setState({ show: 'html' })}
-            />
-            <IconButton
-              className="toolbar-tab"
-              label="CSS"
-              name="language-css3"
-              selected={this.state.show === 'css'}
-              onClick={() => this.setState({ show: 'css' })}
-            />
-            <div class="spacer" />
-            <IconButton
-              tooltip={`${showCodeFrame ? 'Hide' : 'Show'} code frame`}
-              name="code-tags"
-              className={showCodeFrame ? 'toolbar-icon--enabled' : undefined}
-              onClick={() => this.setState({ showCodeFrame: !showCodeFrame})}
-            />
-            <IconButton
-              tooltip={`${showRenderFrame ? 'Hide' : 'Show'} render frame`}
-              name="eye-outline"
-              className={showRenderFrame ? 'toolbar-icon--enabled' : undefined}
-              onClick={() => this.setState({ showRenderFrame: !showRenderFrame })}
-            />
-          </Toolbar>
+              <IconButton
+                tooltip={`${showCodeFrame ? 'Hide' : 'Show'} code frame`}
+                name="code-tags"
+                className={showCodeFrame ? 'toolbar-icon--enabled' : undefined}
+                onClick={() => this.setState({
+                  showCodeFrame: !showCodeFrame,
+                  autohideToolbar: showCodeFrame && showRenderFrame ? false : autohideToolbar,
+                })}
+              />
+              <IconButton
+                tooltip={`${showRenderFrame ? 'Hide' : 'Show'} render frame`}
+                name="eye-outline"
+                className={showRenderFrame ? 'toolbar-icon--enabled' : undefined}
+                onClick={() => this.setState({
+                  showRenderFrame: !showRenderFrame,
+                  autohideToolbar: false
+                })}
+              />
+            </Toolbar>
+          </div>
           {loaded && project && (
             <Buffers split={showCodeFrame && showRenderFrame}>
               {showCodeFrame && (
@@ -306,8 +371,8 @@ class App extends Component<null, State> {
                         this.setState({ project, transpiled: transpiled || '' });
                       }}
                       diagnosticOptions={{
-                        noSemanticValidation: !this.state.semanticValidation,
-                        noSyntaxValidation: !this.state.syntaxValidation,
+                        noSemanticValidation: !semanticValidation,
+                        noSyntaxValidation: !syntaxValidation,
                       }}
                       definitions={project.definitions}
                       editorDidMount={() => this.setState({ editorMounted: true })}

@@ -65,6 +65,17 @@ body {
   width: calc(200px - 8px);*/
 }
 
+#window.autohide-toolbar #toolbar-container {
+  display: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+}
+#window.autohide-toolbar.autohide-toolbar--show #toolbar-container {
+  display: block;
+}
 #toolbar {
   height: 40px;
   display: flex;
@@ -99,13 +110,17 @@ body {
 #toolbar button i {
   font-size: 16px;
 }
-#toolbar .toolbar-tab i {
+#toolbar .toolbar-tab {
+  height: 100%;
+  vertical-align: bottom
+}
+#toolbar .toolbar-tab button i {
   font-size: 12px;
 }
-.toolbar-tab {
-  padding-top: 6px !important;
-  padding-bottom: 6px !important;
-  margin-bottom: -6px;
+.toolbar-tab button {
+  margin-top: 5px;
+  padding-top: 10px !important;
+  padding-bottom: 10px !important;
 }
 .toolbar-icon--enabled i {
   color: yellow;
@@ -114,6 +129,9 @@ body {
 #buffers {
   width: 100%;
   height: calc(100% - 80px);
+}
+#window.autohide-toolbar #buffers {
+  height: 100%;
 }
 .buffer {
   display: inline-block;
