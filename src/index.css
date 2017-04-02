@@ -103,22 +103,16 @@ body {
 #buffers {
   width: 100%;
   height: 100%;
-  display: flex;
-  flex: 1;
-  flex-direction: row;
 }
 .buffer {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  flex-basis: calc(50vw);
+  display: inline-block;
+  width: 50%;
+  height: 100%;
 }
 @media screen and (orientation:portrait) {
-  #buffers {
-    flex-direction: column;
-  }
   .buffer {
-    flex-basis: calc(50vh);
+    width: 100%;
+    height: 50%;
   }
 }
 
