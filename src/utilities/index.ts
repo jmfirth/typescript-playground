@@ -1,13 +1,15 @@
-import * as abilities from './abilities';
-import * as compiler from './compiler';
-import * as github from './github';
-import * as location from './location';
-import * as storage from './storage';
+import * as Abilities from './abilities';
+import * as Compiler from './compiler';
+import * as Github from './github';
+import * as Location from './location';
+import * as Project from './project';
+import * as Storage from './storage';
 
 export {
-  abilities,
-  compiler,
-  github,
-  location,
-  storage
+  Abilities,
+  Compiler,
+  Github,
+  Location,
+  Project,
+  Storage
 };

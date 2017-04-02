@@ -1,3 +1,13 @@
+import * as defaults from '../defaults';
+
+export const definitions = {
+  ...defaults.definitions,
+  ...{
+    'regl/index.d.ts': 'https://raw.githubusercontent.com/jmfirth/DefinitelyTyped/regl-support/types/regl/index.d.ts',
+    'gl-matrix/index.d.ts': 'https://unpkg.com/@types/gl-matrix@2.2.34/index.d.ts',
+  }
+};
+
 export const html = '';
 
 export const css = `

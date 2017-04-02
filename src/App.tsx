@@ -9,8 +9,7 @@ import {
   RenderFrame,
   TypeScriptEditor,
 } from './components/index';
-import * as defaults from './defaults';
-import { storage, location, github } from './utilities';
+import { Github, Location, Project, Storage } from './utilities';
 import * as examples from './examples/index';
 
 const LOCAL_STORAGE_PREFIX = 'tspg-app-';
@@ -33,158 +32,100 @@ const Toolbar = ({ children }: SimpleContainerProps) => <div id="toolbar">{child
 const Buffer = ({ children }: SimpleContainerProps) => <div className="buffer">{children}</div>;
 const Buffers = ({ children }: SimpleContainerProps) => <div id="buffers">{children}</div>;
 
-// interface Project {
-//   type: 'local' | 'string';
-//   id?: string;
-//   description: string;
-//   public: boolean;
-//   files: { [path: string]: File };
-// }
-
-// interface File {
-//   language: string;
-//   content: string;
-// }
-
-// function createEmptyWebProject(code: string = '', html: string = '', css: string = ''): Project {
-//   return {
-//     type: 'local',
-//     id: undefined,
-//     description: 'TypeScript Playground web project',
-//     public: true,
-//     files: {
-//       'index.tsx': { language: 'typescript', content: code } as File,
-//       'index.html': { language: 'html', content: html } as File,
-//       'styles.css': { language: 'css', content: css } as File,
-//     }
-//   } as Project;
-// }
-
-// function createProjectFromGist(gist: github.Gist): Project {
-//   return {
-//     description: gist.description,
-//     public: gist.public,
-//     files: gist.files
-//   } as Project;
-// }
-
-// function createGistDescriptionFromProject(project: Project): github.GistDescription {
-//   return {
-//     description: project.description,
-//     public: project.public,
-//     files: project.files
-//   } as GistDescription;
-// }
-
 interface State {
   loaded: boolean;
   show: string;
-  source: string;
   transpiled: string;
   diagnostics: TypeScript.Diagnostic[];
-  html: string;
-  css: string;
-  definitions: { [key: string]: string };
   semanticValidation: boolean;
   syntaxValidation: boolean;
   editorMounted: boolean;
   authenticated: boolean;
   sidebarOpen: boolean;
-  user?: github.GithubAuthenticatedUser;
-  gist?: github.Gist;
+  user?: Github.GithubAuthenticatedUser;
+  project?: Project.Project;
 }
 
 class App extends Component<null, State> {
   state: State = {
     loaded: false,
     show: 'code',
-    source: '',
-    css: '',
-    html: '',
-    definitions: defaults.definitions,
-    // This line disables errors in jsx tags like <div>, etc.
-    syntaxValidation: false,
-    semanticValidation: false,
     editorMounted: false,
     transpiled: '',
     diagnostics: [],
     authenticated: false,
     sidebarOpen: false,
     user: undefined,
-    gist: undefined,
+    project: undefined,
+    // This line disables errors in jsx tags like <div>, etc.
+    syntaxValidation: false,
+    semanticValidation: false,
   };
 
   async componentWillMount() {
     this.authenticate();
-    const gistId = location.getQueryStringParameter('gistId');
-    if (gistId && await this.loadGist(gistId)) {
-      return;
-    }
-    // default
+    const gistId = Location.getQueryStringParameter('gistId');
+    if (gistId && await this.loadGist(gistId)) { return; }
     this.setState({
       loaded: true,
-      source: examples.preact.code,
-      css: examples.preact.css,
-      html: examples.preact.html,
+      project: Project.createNewProject(
+        examples.preact.code,
+        examples.preact.html,
+        examples.preact.css,
+        examples.preact.definitions
+      )
     });
   }
 
   async authenticate() {
-    const authenticated = github.checkAuthentication() || await github.maybeAuthenticate();
+    const authenticated = Github.checkAuthentication() || await Github.maybeAuthenticate();
     let user = undefined;
-    if (authenticated) {
-      user = await github.getUser();
-      // debugger;
-    }
+    if (authenticated) { user = await Github.getUser(); }
     this.setState({ authenticated, user });
   }
 
   loadSource() {
-    return storage.getStorageItem(LOCAL_STORAGE_PREFIX, RECENT);
+    return Storage.getStorageItem(LOCAL_STORAGE_PREFIX, RECENT);
   }
 
   saveSource(source: string) {
-    storage.setStorageItem(LOCAL_STORAGE_PREFIX, RECENT, source, moment().add(6, 'months').toDate());
+    Storage.setStorageItem(LOCAL_STORAGE_PREFIX, RECENT, source, moment().add(6, 'months').toDate());
   }
 
   loadDefinition() {
-    // const { show } = this.state;
+    const { project } = this.state;
+    if (!project) { return; }
     const packageName = prompt('Package name', 'react');
-    if (!packageName) {
-      return;
-    }
+    if (!packageName) { return; }
     const definitionUrl = prompt('Definition url', 'https://unpkg.com/@types/react@15.0.20/index.d.ts');
-    if (!definitionUrl) {
-      return;
-    }
-    const definitions = this.state.definitions;
-    definitions[`${packageName}.d.ts`] = definitionUrl;
-    this.setState({ definitions });
+    if (!definitionUrl) { return; }
+    const lastUrlPart = definitionUrl.substring(definitionUrl.lastIndexOf('/') + 1);
+    const matches = lastUrlPart.match(/(.*).d.ts$/);
+    const fileName = matches ? matches[1] : 'index';
+    project.definitions[`${packageName}/${fileName}.d.ts`] = definitionUrl;
+    this.setState({ project });
   }
 
   async loadGist(gistId: string) {
     try {
-      const gist = await github.getGist(gistId);
+      const gist = await Github.getGist(gistId);
       if (gist) {
-        const source = gist.files['index.tsx'] ? gist.files['index.tsx'].content : '';
-        const css = gist.files['style.css'] ? gist.files['style.css'].content : '';
-        const html = gist.files['index.html'] ? gist.files['index.html'].content : '';
-        if (source || css || html) {
-          this.setState({ loaded: true, html, css, source, gist });
+        const project = Project.createProjectFromGist(gist);
+        if (project) {
+          this.setState({ loaded: true, project });
           return true;
         }
       }
       throw new Error();
-    } catch (e) {
-      return;
-    }
+    } catch (e) { return; }
   }
 
   saveOrUpdateGist() {
-    if (!this.state.user) {
+    const { user, project } = this.state;
+    if (!user) {
       // @TODO -
       alert('Please copy code, authenticate and repaste.  Sorry, saving before authentication is coming soon.');
-    } else if (this.state.gist && this.state.gist.owner.id === this.state.user.id) {
+    } else if (project && project.ownerId === user.id.toString()) {
       this.updateGist();
     } else {
       this.saveGist();
@@ -192,47 +133,57 @@ class App extends Component<null, State> {
   }
 
   async saveGist() {
-    const defaultDescription = 'From TypeScript Playground';
-    const description = prompt('Description of gist', defaultDescription) || defaultDescription;
-    const fb = new github.GistFilesBuilder();
-    fb.addFile('index.tsx', this.state.source);
-    fb.addFile('style.css', this.state.css);
-    fb.addFile('index.html', this.state.html);
-    const gist = await github.createGist(description, fb.toFiles());
-    if (gist) {
-      this.setState({ gist });
+    try {
+      if (!this.state.project) {
+        throw new Error('Fatal error: project not found.  Please copy your source and reload.');
+      }
+      const defaultDescription = 'From TypeScript Playground';
+      const description = prompt('Description of gist', defaultDescription) || defaultDescription;
+      const gist = await Github.createGist(description, this.state.project.files);
+      if (!gist) {
+        throw new Error('Could not create a Gist.  If Github status is fine, we are sorry!  Please file an issue.');
+      }
+      const project = Project.createProjectFromGist(gist);
+      if (!project) {
+        throw new Error('Saved Gist was not processable.  Please try again.');
+      }
+      this.setState({ project });
       prompt('Gist saved', gist.id);
-    } else {
-      alert('Error saving gist');
+    } catch (e) {
+      alert(e.message);
     }
   }
 
   async updateGist() {
-    const { gist } = this.state;
-    if (gist) {
-      const description = prompt('Description of gist', gist.description) || gist.description;
-      const fb = new github.GistFilesBuilder();
-      fb.addFile('index.tsx', this.state.source);
-      fb.addFile('style.css', this.state.css);
-      fb.addFile('index.html', this.state.html);
-      const updated = await github.updateGist(gist.id, description, fb.toFiles());
-      if (updated) {
-        this.setState({ gist: updated });
-        prompt('Gist updated', gist.id);
-      } else {
-        alert('Error updating gist');
+    const { project: current } = this.state;
+    try {
+      if (!current || !current.id) {
+        throw new Error('Fatal error: project not found.  Please copy your source and reload.');
       }
+      const description = prompt('Description of gist', current.description) || current.description;
+      const gist = await Github.updateGist(current.id, description, current.files);
+      if (!gist) {
+        throw new Error('Could not create a Gist.  If Github status is fine, we are sorry!  Please file an issue.');
+      }
+      const project = Project.createProjectFromGist(gist);
+      if (!project) {
+        throw new Error('Saved Gist was not processable.  Please try again.');
+      }
+      this.setState({ project });
+      prompt('Gist updated', gist.id);
+    } catch (e) {
+      alert(e.message);
     }
   }
 
   shareUrl() {
-    const { gist } = this.state;
+    const { project } = this.state;
     const { origin, pathname } = window.location;
-    return gist ? `${origin}${pathname}?gistId=${gist.id}` : `${origin}${pathname}`;
+    return project ? `${origin}${pathname}?gistId=${project.id}` : `${origin}${pathname}`;
   }
 
   render() {
-    const { loaded, show, editorMounted } = this.state;
+    const { loaded, show, editorMounted, project } = this.state;
     return (
       <Window sidebarOpen={this.state.sidebarOpen}>
         {/*<Sidebar>
@@ -261,7 +212,7 @@ class App extends Component<null, State> {
               name="settings"
               onClick={() => alert('Coming soon: persistent editor, layout, and compiler options!!')}
             />
-            <IconLink name="github-circle" url={github.GITHUB_OAUTH_URL} />
+            <IconLink name="github-circle" url={Github.GITHUB_OAUTH_URL} />
           </Toolbar>
           <Toolbar>
             <IconButton
@@ -286,40 +237,54 @@ class App extends Component<null, State> {
               onClick={() => this.setState({ show: 'css' })}
             />
           </Toolbar>
-          {loaded && (
+          {loaded && project && (
             <Buffers>
               <Buffer>
                 {show === 'code' && (
                   <TypeScriptEditor
-                    code={this.state.source}
-                    onChange={(source, transpiled, diagnostics) =>
-                      this.setState({ source, transpiled: transpiled || '' })
-                    }
+                    code={project.files['index.tsx'] ? project.files['index.tsx'].content : ''}
+                    onChange={(source, transpiled, diagnostics) => {
+                      project.files['index.tsx'] = project.files['index.tsx'] || {};
+                      project.files['index.tsx'].content = source;
+                      this.setState({ project, transpiled: transpiled || '' });
+                    }}
                     diagnosticOptions={{
                       noSemanticValidation: !this.state.semanticValidation,
                       noSyntaxValidation: !this.state.syntaxValidation,
                     }}
-                    definitions={this.state.definitions}
+                    definitions={project.definitions}
                     editorDidMount={() => this.setState({ editorMounted: true })}
                   />
                 )}
                 {show === 'html' && (
                   <HTMLEditor
-                    code={this.state.html}
-                    onChange={html => this.setState({ html })}
+                    code={project.files['index.html'] ? project.files['index.html'].content : ''}
+                    onChange={html => {
+                      project.files['index.html'] = project.files['index.html'] || {};
+                      project.files['index.html'].content = html;
+                      this.setState({ project });
+                    }}
                   />
                 )}
                 {show === 'css' && (
                   <CSSEditor
-                    code={this.state.css}
-                    onChange={css => this.setState({ css })}
+                    code={project.files['style.css'] ? project.files['style.css'].content : ''}
+                    onChange={css => {
+                      project.files['style.css'] = project.files['style.css'] || {};
+                      project.files['style.css'].content = css;
+                      this.setState({ project });
+                    }}
                   />
                 )}
               </Buffer>
               <Buffer>
-                {editorMounted &&
-                  <RenderFrame code={this.state.transpiled} css={this.state.css} html={this.state.html} />
-                }
+                {editorMounted && project && (
+                  <RenderFrame
+                    code={this.state.transpiled}
+                    html={project.files['index.html'] ? project.files['index.html'].content : ''}
+                    css={project.files['style.css'] ? project.files['style.css'].content : ''}
+                  />
+                )}
               </Buffer>
             </Buffers>
           )}

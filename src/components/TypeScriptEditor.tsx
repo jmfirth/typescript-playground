@@ -2,13 +2,13 @@ import { h, Component } from 'preact';
 import { debounce } from 'lodash';
 import MonacoEditor from './MonacoEditor';
 import * as TypeScript from 'typescript';
-import { abilities, compiler, storage } from '../utilities';
+import { Abilities, Compiler, Storage } from '../utilities';
 
 interface References { [name: string]: string; }
 
 const LOCAL_STORAGE_PREFIX = 'tspg-cache-';
 
-const notInStorage = (fragment: string) => !storage.getStorageItem(LOCAL_STORAGE_PREFIX, fragment);
+const notInStorage = (fragment: string) => !Storage.getStorageItem(LOCAL_STORAGE_PREFIX, fragment);
 
 interface Props {
   code?: string;
@@ -25,8 +25,8 @@ export default class TypeScriptEditor extends Component<Props, void> {
   definitionSource: string[];
 
   compileSource(source: string) {
-    const configuration = compiler.createConfiguration(source);
-    const result = compiler.compile(configuration.sourceBundle, configuration.compilerOptions);
+    const configuration = Compiler.createConfiguration(source);
+    const result = Compiler.compile(configuration.sourceBundle, configuration.compilerOptions);
     if (!result.emitResult.emitSkipped) {
       return result;
     } else {
@@ -67,7 +67,7 @@ export default class TypeScriptEditor extends Component<Props, void> {
         if (definitions) {
           return fetch(definitions[key])
             .then(res => res.text())
-            .then(source => storage.setStorageItem(LOCAL_STORAGE_PREFIX, key, source));
+            .then(source => Storage.setStorageItem(LOCAL_STORAGE_PREFIX, key, source));
         } else {
           return undefined;
         }
@@ -82,7 +82,15 @@ export default class TypeScriptEditor extends Component<Props, void> {
     const typescriptDefaults = this.monaco.languages.typescript.typescriptDefaults;
     Object.keys(definitions).forEach(key => {
       if (this.props.definitions && !typescriptDefaults[extraLibsKey][key]) {
-        const lib = storage.getStorageItem(LOCAL_STORAGE_PREFIX, key) as string;
+        let lib = Storage.getStorageItem(LOCAL_STORAGE_PREFIX, key) as string;
+        if (lib.indexOf('declare module \'') === -1) {
+          const matches = key.match(/(.*)\/(.*).d.ts/);
+          lib = `
+declare module '${matches ? matches[1] : key}' {
+  ${lib}
+}
+`;
+        }
         typescriptDefaults.addExtraLib(lib, key);
       }
     });
@@ -123,7 +131,7 @@ export default class TypeScriptEditor extends Component<Props, void> {
           lineNumbers: 'on',
           lineNumbersMinChars: 3,
           theme: 'vs-dark',
-          fontSize: abilities.isMobile() ? 16 : 13,
+          fontSize: Abilities.isMobile() ? 16 : 13,
           // cursorBlinking: 'off',
           automaticLayout: true,
           wrappingIndent: 'same',

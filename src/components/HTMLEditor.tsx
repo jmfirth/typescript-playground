@@ -1,7 +1,7 @@
 import { h, Component } from 'preact';
 import debounce = require('lodash/debounce');
 import MonacoEditor from './MonacoEditor';
-import { abilities } from '../utilities';
+import { Abilities } from '../utilities';
 
 interface HTMLEditorProps {
   code?: string;
@@ -42,7 +42,7 @@ export default class HTMLEditor extends Component<HTMLEditorProps, void> {
           lineNumbers: 'on',
           lineNumbersMinChars: 3,
           theme: 'vs-dark',
-          fontSize: abilities.isMobile() ? 16 : 13,
+          fontSize: Abilities.isMobile() ? 16 : 13,
           // cursorBlinking: 'off',
           automaticLayout: true,
           wrappingIndent: 'same',
