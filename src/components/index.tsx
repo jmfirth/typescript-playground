@@ -2,7 +2,7 @@ import CSSEditor from './CSSEditor';
 import HTMLEditor from './HTMLEditor';
 import IconButton from './IconButton';
 import IconLink from './IconLink';
-import Icon from './IconLink';
+import Icon from './Icon';
 import RenderFrame from './RenderFrame';
 import TypeScriptEditor from './TypeScriptEditor';
 import {

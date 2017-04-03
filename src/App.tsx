@@ -6,14 +6,16 @@ import {
   Container,
   CSSEditor,
   HTMLEditor,
+  Icon,
   IconButton,
   IconLink,
   RenderFrame,
+  Sidebar,
   Toolbar,
   TypeScriptEditor,
   Window,
 } from './components/index';
-import { Github, Location, Project, Storage } from './utilities';
+import { Abilities, Github, Location, Project, Storage } from './utilities';
 import * as Examples from './examples/index';
 import * as Definitions from './definitions';
 
@@ -37,11 +39,11 @@ interface State {
 
 class App extends Component<null, State> {
   state: State = {
-    show: 'code',
+    show: 'index.tsx',
     editorMounted: false,
     transpiled: '',
     authenticated: false,
-    sidebarOpen: false,
+    sidebarOpen: !Abilities.isMobile(),
     user: undefined,
     project: undefined,
     autohideToolbar: false,
@@ -216,103 +218,80 @@ class App extends Component<null, State> {
       editorMounted, project, semanticValidation, syntaxValidation,
     } = this.state;
 
+    const extension = show.substring(show.lastIndexOf('.') + 1);
+    let editorType = '';
+    switch (extension) {
+      case 'ts':
+      case 'tsx':
+      case 'js':
+      case 'jsx':
+        editorType = 'code';
+        break;
+      case 'html':
+        editorType = 'html';
+        break;
+      case 'css':
+        editorType = 'css';
+        break;
+      default:
+        editorType = 'code';
+    }
+
     return (
       <Window sidebarOpen={sidebarOpen} autohideToolbar={autohideToolbar}>
-        {/*<Sidebar>
-          <Toolbar>
-            <div className="toolbar-title">Explorer</div>
-          </Toolbar>
+        <div id="sidebar-overlay" onClick={() => this.setState({ sidebarOpen: false })} />
+        <Sidebar>
           <Toolbar>
             <IconButton
-              name="menu"
-              onClick={() => alert('Coming soon: persistent editor, layout, and compiler options!!')}
+              tooltip="New Project"
+              name="folder-plus"
+              onClick={() => this.createNewProject()}
             />
+            {authenticated && (
+              <IconButton
+                tooltip="Save Gist"
+                name="folder-upload"
+                onClick={() => this.saveOrUpdateGist()}
+              />
+            )}
+            {project && project.id && (
+              <IconButton
+                tooltip="Create Share Link"
+                name="share"
+                onClick={() => prompt('Share URL:', this.shareUrl())}
+              />
+            )}
+            {!authenticated &&
+              <IconLink tooltip="Login to Github" name="github-circle" url={Github.GITHUB_OAUTH_URL} />
+            }
           </Toolbar>
-          <div id="sidebar-content" />
-        </Sidebar>*/}
-        <Container>
-          <div id="toolbar-container">
-            <Toolbar>
-              {/*<IconButton
-                name="menu"
-                onClick={() => this.setState({ sidebarOpen: !sidebarOpen })}
-              />*/}
-              <div
-                className="toolbar-title is-contenteditable"
-                contentEditable={true}
-                onInput={(e) => this.onDescriptionInput(e)}
+          <div id="sidebar-content">
+            <ul className="sidebar-tree">
+              <li
+                className={`${show === 'index.tsx' ? 'selected' : ''}`}
+                onClick={() => this.setState({ show: 'index.tsx' })}
               >
-                {project && project.description}
-              </div>
-              <div className="spacer" />
-              <IconButton
-                tooltip="New Project"
-                name="folder-plus"
-                onClick={() => this.createNewProject()}
-              />
-              <IconButton
-                tooltip="Add TypeScript Definition"
-                name="library-plus"
-                onClick={() => this.loadDefinition()}
-              />
-              {authenticated && (
-                <IconButton
-                  tooltip="Save Gist"
-                  name="folder-upload"
-                  onClick={() => this.saveOrUpdateGist()}
-                />
-              )}
-              {project && project.id && (
-                <IconButton
-                  tooltip="Create Share Link"
-                  name="share"
-                  onClick={() => prompt('Share URL:', this.shareUrl())}
-                />
-              )}
-              {!authenticated &&
-                <IconLink tooltip="Login to Github" name="github-circle" url={Github.GITHUB_OAUTH_URL} />
-              }
-              {/*<IconButton
-                tooltip="Settings"
-                name="settings"
-                onClick={() => alert('Coming soon: persistent editor, layout, and compiler options!!')}
-              />*/}
-            </Toolbar>
+                <Icon name="language-typescript" className="sidebar-file-icon" />
+                <span>index.tsx</span>
+              </li>
+              <li
+                className={`${show === 'index.html' ? 'selected' : ''}`}
+                onClick={() => this.setState({ show: 'index.html' })}
+              >
+                <Icon name="language-html5" className="sidebar-file-icon" />
+                <span>index.html</span>
+              </li>
+              <li
+                className={`${show === 'style.css' ? 'selected' : ''}`}
+                onClick={() => this.setState({ show: 'style.css' })}
+              >
+                <Icon name="language-css3" className="sidebar-file-icon" />
+                <span>style.css</span>
+              </li>
+            </ul>
+          </div>
+          <div id="sidebar-footer">
             <Toolbar>
-              {showCodeFrame && (
-                <IconButton
-                  className="toolbar-tab"
-                  label="TypeScript"
-                  name="language-typescript"
-                  selected={this.state.show === 'code'}
-                  onClick={() => this.setState({ show: 'code' })}
-                />
-              )}
-              {showCodeFrame && (
-                <IconButton
-                  className="toolbar-tab"
-                  label="HTML"
-                  name="language-html5"
-                  selected={this.state.show === 'html'}
-                  onClick={() => this.setState({ show: 'html' })}
-                />
-              )}
-              {showCodeFrame && (
-                <IconButton
-                  className="toolbar-tab"
-                  label="CSS"
-                  name="language-css3"
-                  selected={this.state.show === 'css'}
-                  onClick={() => this.setState({ show: 'css' })}
-                />
-              )}
-              <div class="spacer" />
-              <IconButton
-                tooltip={`${autohideToolbar ? 'Disable' : 'Enable'} toolbar auto-hide`}
-                name="arrow-expand-all" // "fullscreen"
-                className={`hide-mobile ${autohideToolbar ? 'toolbar-icon--enabled' : ''}`}
-                onClick={() => showCodeFrame && this.setState({ autohideToolbar: !autohideToolbar})}
-              />
               <IconButton
                 tooltip={`${showCodeFrame ? 'Hide' : 'Show'} code frame`}
                 name="code-tags"
@@ -332,10 +311,39 @@ class App extends Component<null, State> {
                 })}
               />
               <IconButton
-                tooltip={`${semanticValidation ? 'Hide' : 'Show'} render frame`}
+                tooltip={`${semanticValidation ? 'Disable' : 'Enable'} validations`}
                 name="code-tags-check"
                 className={semanticValidation ? 'toolbar-icon--enabled' : undefined}
                 onClick={() => this.toggleEditorValidations()}
+              />
+              <IconButton
+                tooltip="Add TypeScript Definition"
+                name="library-plus"
+                onClick={() => this.loadDefinition()}
+              />
+            </Toolbar>
+          </div>
+        </Sidebar>
+        <Container>
+          <div id="toolbar-container">
+            <Toolbar>
+              <IconButton
+                name="menu"
+                onClick={() => this.setState({ sidebarOpen: !sidebarOpen })}
+              />
+              <div
+                className="toolbar-title is-contenteditable"
+                contentEditable={true}
+                onInput={(e) => this.onDescriptionInput(e)}
+              >
+                {project && project.description}
+              </div>
+              <div className="spacer" />
+              <IconButton
+                tooltip={`${autohideToolbar ? 'Disable' : 'Enable'} toolbar auto-hide`}
+                name="arrow-expand-all" // "fullscreen"
+                className={`hide-mobile ${autohideToolbar ? 'toolbar-icon--enabled' : ''}`}
+                onClick={() => showCodeFrame && this.setState({ autohideToolbar: !autohideToolbar})}
               />
             </Toolbar>
           </div>
@@ -343,12 +351,12 @@ class App extends Component<null, State> {
             <Buffers split={showCodeFrame && showRenderFrame}>
               {showCodeFrame && (
                 <Buffer>
-                  {show === 'code' && (
+                  {editorType === 'code' && (
                     <TypeScriptEditor
-                      code={project.files['index.tsx'] ? project.files['index.tsx'].content : ''}
+                      code={project.files[show] ? project.files[show].content : ''}
                       onChange={(source, transpiled, diagnostics) => {
-                        project.files['index.tsx'] = project.files['index.tsx'] || {};
-                        project.files['index.tsx'].content = source;
+                        project.files[show] = project.files[show] || {};
+                        project.files[show].content = source;
                         this.setState({ project, transpiled: transpiled || '' });
                       }}
                       diagnosticOptions={{
@@ -359,22 +367,22 @@ class App extends Component<null, State> {
                       editorDidMount={() => this.setState({ editorMounted: true })}
                     />
                   )}
-                  {show === 'html' && (
+                  {editorType === 'html' && (
                     <HTMLEditor
-                      code={project.files['index.html'] ? project.files['index.html'].content : ''}
+                      code={project.files[show] ? project.files[show].content : ''}
                       onChange={html => {
-                        project.files['index.html'] = project.files['index.html'] || {};
-                        project.files['index.html'].content = html;
+                        project.files[show] = project.files[show] || {};
+                        project.files[show].content = html;
                         this.setState({ project });
                       }}
                     />
                   )}
-                  {show === 'css' && (
+                  {editorType === 'css' && (
                     <CSSEditor
-                      code={project.files['style.css'] ? project.files['style.css'].content : ''}
+                      code={project.files[show] ? project.files[show].content : ''}
                       onChange={css => {
-                        project.files['style.css'] = project.files['style.css'] || {};
-                        project.files['style.css'].content = css;
+                        project.files[show] = project.files[show] || {};
+                        project.files[show].content = css;
                         this.setState({ project });
                       }}
                     />

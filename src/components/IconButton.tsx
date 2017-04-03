@@ -19,6 +19,6 @@ export default ({ label, name, onClick, selected, tooltip, className }: IconButt
     >
       <Icon name={name} /><span className="button-label"> {label}</span>
     </button>
-    {tooltip && <span className="tooltiptext tooltiptext-left">{tooltip}</span>}
+    {tooltip && <span className="tooltiptext tooltiptext-right">{tooltip}</span>}
   </div>
 );

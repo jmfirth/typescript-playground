@@ -14,6 +14,6 @@ export default ({ label, name, url, selected, tooltip }: IconButtonProps) => (
     <a className={`button ${selected ? 'button-selected' : ''}`} href={url}>
       <Icon name={name} /> {label}
     </a>
-    {tooltip && <span className="tooltiptext tooltiptext-left">{tooltip}</span>}
+    {tooltip && <span className="tooltiptext tooltiptext-right">{tooltip}</span>}
   </div>
 );

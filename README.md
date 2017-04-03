@@ -36,5 +36,20 @@
 
 - [PixiJS example](https://jmfirth.github.io/typescript-playground/?gistId=e1e4ec747c0b742e33bf239d5735a65d)
 
+## TODOS
+
+Toolbar design
+Sidebar
+Definitions tab
+Multiple files
+Subdirectories
+Surface editor options in UI, persist to gist
+Surface compiler options in UI, persist to gist
+Support keybindings
+Surface user preferences in UI, persist to local storage
+UI events in Command Palette
+Add hotkey for open/close Sidebar
+Add hotkey for layout toggles
+
 [systemjs-url]: https://github.com/systemjs/systemjs
 [wzrd-url]: https://wzrd.in
