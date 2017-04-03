@@ -1,7 +1,7 @@
-import * as defaults from '../defaults';
+import * as Definitions from '../definitions';
 
 export const definitions = {
-  ...defaults.definitions,
+  ...Definitions.defaults,
   ...{
     'regl/index.d.ts': 'https://raw.githubusercontent.com/jmfirth/DefinitelyTyped/regl-support/types/regl/index.d.ts',
     'gl-matrix/index.d.ts': 'https://unpkg.com/@types/gl-matrix@2.2.34/index.d.ts',

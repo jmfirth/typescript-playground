@@ -13,17 +13,12 @@ ${html}
   </body>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/systemjs/0.20.11/system.js"></script>
   <script>
-SystemJS.config({
+System.config({
   baseURL: 'https://browserify-cdn.abstractsequential.com/standalone/',
 });
-
-let define = SystemJS.amdDefine;
-let __s = System;
-System = SystemJS
+let define = System.amdDefine;
 ${source}
-
-SystemJS.import('entry');
-System = __s;
+System.import('index');
   </script>
 </html>
 `;

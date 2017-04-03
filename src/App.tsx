@@ -11,6 +11,7 @@ import {
 } from './components/index';
 import { Github, Location, Project, Storage } from './utilities';
 import * as examples from './examples/index';
+import * as Definitions from './definitions';
 
 const LOCAL_STORAGE_PREFIX = 'tspg-app-';
 const RECENT = 'recent';
@@ -41,10 +42,8 @@ class Window extends Component<WindowProps, WindowState> {
   handleMouseMove(e: MouseEvent) {
     if (!this.props.autohideToolbar) { return; }
     if (!this.state.mouseAtTop && e.clientY < 30) {
-      console.log('mouse at top');
       this.setState({ mouseAtTop: true });
     } else if (this.state.mouseAtTop && e.clientY > 90) {
-      console.log('mouse not at top');
       this.setState({ mouseAtTop: false });
     }
   }
@@ -55,6 +54,7 @@ class Window extends Component<WindowProps, WindowState> {
     return (
       <div
         id="window"
+        // tslint:disable-next-line max-line-length
         className={`${sidebarOpen ? 'sidebar-open' : ''} ${autohideToolbar ? 'autohide-toolbar' : ''} ${mouseAtTop ? 'autohide-toolbar--show' : ''}`}
         onMouseMove={(e: MouseEvent) => this.handleMouseMove(e)}
       >
@@ -63,7 +63,6 @@ class Window extends Component<WindowProps, WindowState> {
     );
   }
 }
-
 
 interface SimpleContainerProps { children?: JSX.Element | JSX.Element[]; }
 // const Sidebar = ({ children }: SimpleContainerProps) => <div id="sidebar">{children}</div>;
@@ -79,7 +78,6 @@ const Buffers = ({ split, children }: BufferProps) =>
   <div id="buffers" className={split ? 'buffers-split' : undefined}>{children}</div>;
 
 interface State {
-  loaded: boolean;
   show: string;
   transpiled: string;
   diagnostics: TypeScript.Diagnostic[];
@@ -97,7 +95,6 @@ interface State {
 
 class App extends Component<null, State> {
   state: State = {
-    loaded: false,
     show: 'code',
     editorMounted: false,
     transpiled: '',
@@ -119,7 +116,6 @@ class App extends Component<null, State> {
     const gistId = Location.getQueryStringParameter('gistId');
     if (gistId && await this.loadGist(gistId)) { return; }
     this.setState({
-      loaded: true,
       project: Project.createNewProject(
         examples.preact.code,
         examples.preact.html,
@@ -144,17 +140,36 @@ class App extends Component<null, State> {
     Storage.setStorageItem(LOCAL_STORAGE_PREFIX, RECENT, source, moment().add(6, 'months').toDate());
   }
 
-  loadDefinition() {
+  createNewProject() {
+    this.setState({ project: undefined });
+    setTimeout(() => this.setState({ project: Project.createNewProject(), transpiled: '' }), 250);
+  }
+
+  async loadDefinition() {
     const { project } = this.state;
     if (!project) { return; }
-    const packageName = prompt('Package name', 'react');
-    if (!packageName) { return; }
-    const definitionUrl = prompt('Definition url', 'https://unpkg.com/@types/react@15.0.20/index.d.ts');
-    if (!definitionUrl) { return; }
-    const lastUrlPart = definitionUrl.substring(definitionUrl.lastIndexOf('/') + 1);
-    const matches = lastUrlPart.match(/(.*).d.ts$/);
-    const fileName = matches ? matches[1] : 'index';
-    project.definitions[`${packageName}/${fileName}.d.ts`] = definitionUrl;
+    const moduleName = prompt('Module name', 'react');
+    if (!moduleName) { return; }
+    // @TODO: helpful defaults!
+    const definitions = Definitions.definitionList[moduleName];
+    if (definitions) {
+      project.definitions = {
+        ...project.definitions,
+        ...definitions
+      };
+    } else {
+      let definitionUrl: string | void = await Definitions.findDefinition(moduleName);
+      const message = definitionUrl
+                    ? `Found a definition.  Confirm definition or enter an alternative.`
+                    : 'Could not find definition.  Please enter the URL of the definition you wish to add.';
+      definitionUrl = prompt(message, definitionUrl || 'https://unpkg.com/@types/react@15.0.20/index.d.ts')
+                   || undefined;
+      if (!definitionUrl) { return; }
+      const lastUrlPart = definitionUrl.substring(definitionUrl.lastIndexOf('/') + 1);
+      const matches = lastUrlPart.match(/(.*).d.ts$/);
+      const fileName = matches ? matches[1] : 'index';
+      project.definitions[`${moduleName}/${fileName}.d.ts`] = definitionUrl;
+    }
     this.setState({ project });
   }
 
@@ -164,7 +179,7 @@ class App extends Component<null, State> {
       if (gist) {
         const project = Project.createProjectFromGist(gist);
         if (project) {
-          this.setState({ loaded: true, project });
+          this.setState({ project });
           return true;
         }
       }
@@ -243,7 +258,7 @@ class App extends Component<null, State> {
 
   render() {
     const {
-      authenticated, loaded, show, sidebarOpen, autohideToolbar, showRenderFrame, showCodeFrame,
+      authenticated, show, sidebarOpen, autohideToolbar, showRenderFrame, showCodeFrame,
       editorMounted, project, semanticValidation, syntaxValidation,
     } = this.state;
     return (
@@ -276,14 +291,19 @@ class App extends Component<null, State> {
               </div>
               <div className="spacer" />
               <IconButton
+                tooltip="New Project"
+                name="folder-plus"
+                onClick={() => this.createNewProject()}
+              />
+              <IconButton
                 tooltip="Add TypeScript Definition"
-                name="plus"
+                name="library-plus"
                 onClick={() => this.loadDefinition()}
               />
               {authenticated && (
                 <IconButton
                   tooltip="Save Gist"
-                  name="content-save"
+                  name="folder-upload"
                   onClick={() => this.saveOrUpdateGist()}
                 />
               )}
@@ -334,7 +354,7 @@ class App extends Component<null, State> {
               <div class="spacer" />
               <IconButton
                 tooltip={`${autohideToolbar ? 'Disable' : 'Enable'} toolbar auto-hide`}
-                name="fullscreen"
+                name="arrow-expand-all" // "fullscreen"
                 className={autohideToolbar ? 'toolbar-icon--enabled' : undefined}
                 onClick={() => showCodeFrame && this.setState({ autohideToolbar: !autohideToolbar})}
               />
@@ -358,7 +378,7 @@ class App extends Component<null, State> {
               />
             </Toolbar>
           </div>
-          {loaded && project && (
+          {project && (
             <Buffers split={showCodeFrame && showRenderFrame}>
               {showCodeFrame && (
                 <Buffer>

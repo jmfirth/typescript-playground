@@ -1,7 +1,7 @@
-import * as defaults from '../defaults';
+import * as Definitions from '../definitions';
 
 export const definitions = {
-  ...defaults.definitions,
+  ...Definitions.defaults,
   ...{ 'preact/preact.d.ts': 'https://unpkg.com/preact/src/preact.d.ts' }
 };
 

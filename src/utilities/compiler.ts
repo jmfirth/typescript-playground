@@ -37,8 +37,8 @@ export function createConfiguration(source: string) {
   }
   return  {
     sourceBundle: {
-      entry: 'entry.tsx',
-      files: [createEditorSourceFile('entry.tsx', source)],
+      entry: 'index.tsx',
+      files: [createEditorSourceFile('index.tsx', source)],
     },
     compilerOptions: {
       outFile: 'bundle.js',
@@ -104,7 +104,7 @@ export function compile(sourceBundle: SourceBundle, options: TypeScript.Compiler
 
     resolveModuleNames(_moduleNames: string[], _containingFile: string): TypeScript.ResolvedModule[] {
       return _moduleNames.map(moduleName => ({
-        resolvedFileName: moduleName.slice(1) + '.ts',
+        resolvedFileName: moduleName.slice(1) + '.tsx',
       }));
     },
 

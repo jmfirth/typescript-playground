@@ -1,5 +1,5 @@
 import * as Github from './github';
-import * as defaults from '../defaults';
+import * as Definitions from '../definitions';
 
 export interface Project {
   type: 'local' | 'gist';
@@ -20,7 +20,7 @@ export function createNewProject(
   code: string = '',
   html: string = '',
   css: string = '',
-  definitions: { [key: string]: string } = defaults.definitions,
+  definitions: Definitions.Definitions = Definitions.defaults,
   isPublic: boolean = true,
 ): Project {
   return {
@@ -31,16 +31,16 @@ export function createNewProject(
     public: isPublic,
     definitions,
     files: {
-      'index.tsx': code ? { content: code } as File : undefined,
-      'index.html': html ? { content: html } as File : undefined,
-      'styles.css': css ? { content: css } as File : undefined,
+      'index.tsx': { content: code } as File,
+      'index.html': { content: html } as File,
+      'styles.css': { content: css } as File,
     }
   } as Project;
 }
 
 export function createProjectFromGist(gist: Github.Gist): Project {
   let files = gist.files;
-  const definitions = files['definitions.json'] ? JSON.parse(files['definitions.json'].content) : defaults.definitions;
+  const definitions = files['definitions.json'] ? JSON.parse(files['definitions.json'].content) : Definitions.defaults;
   if (definitions) {
     const fb = new Github.GistFilesBuilder(gist.files);
     fb.removeFile('definitions.json');

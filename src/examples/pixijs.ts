@@ -1,7 +1,7 @@
-import * as defaults from '../defaults';
+import * as Definitions from '../definitions';
 
 export const definitions = {
-  ...defaults.definitions,
+  ...Definitions.defaults,
   ...{ 'pixi/index.js.d.ts': 'https://unpkg.com/@types/pixi.js@4.4.1/index.d.ts' }
 };
 
