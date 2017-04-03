@@ -77,7 +77,6 @@ export async function findDefinition(moduleName: string) {
       const res = await fetch(urls[i]);
       const text = await res.text();
       if (!text.startsWith('Not found: package')) { return urls[i]; }
-      else { console.log('Not found at:', urls[i]); }
     } catch (e) {/* ... */}
   }
   return;

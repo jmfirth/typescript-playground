@@ -16,9 +16,9 @@ ${html}
 System.config({
   baseURL: 'https://browserify-cdn.abstractsequential.com/standalone/',
 });
-let define = System.amdDefine;
+var define = System.amdDefine;
 ${source}
-System.import('index');
+${source && source.indexOf('define("index"') > -1 && 'System.import("index");'}
   </script>
 </html>
 `;
@@ -33,6 +33,6 @@ interface Props {
 export default class RenderFrame extends Component<Props, null> {
   render() {
     const { code, css, html } = this.props;
-    return <iframe className="surface" srcDoc={getIFrameSource(code, css, html)}/>;
+    return <iframe className="surface" srcDoc={getIFrameSource(code, css, html)} />;
   }
 }

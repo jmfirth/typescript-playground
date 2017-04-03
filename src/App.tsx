@@ -142,7 +142,7 @@ class App extends Component<null, State> {
 
   createNewProject() {
     this.setState({ project: undefined });
-    setTimeout(() => this.setState({ project: Project.createNewProject(), transpiled: '' }), 250);
+    setTimeout(() => this.setState({ project: Project.createNewProject(), transpiled: '' }), 0);
   }
 
   async loadDefinition() {
@@ -227,7 +227,7 @@ class App extends Component<null, State> {
       if (!current || !current.id) {
         throw new Error('Fatal error: project not found.  Please copy your source and reload.');
       }
-      const gist = await Github.updateGist(current.id, current.description, current.files);
+      const gist = await Github.updateGist(current.id, current.description, current.files, current.definitions);
       if (!gist) {
         throw new Error('Could not create a Gist.  If Github status is fine, we are sorry!  Please file an issue.');
       }
@@ -256,11 +256,25 @@ class App extends Component<null, State> {
     }
   }
 
+  toggleEditorValidations() {
+    const { project, semanticValidation } = this.state;
+    this.setState({ project: undefined });
+    setTimeout(
+      () => this.setState({
+        project,
+        semanticValidation: !semanticValidation,
+        syntaxValidation: !semanticValidation,
+      }),
+      150
+    );
+  }
+
   render() {
     const {
       authenticated, show, sidebarOpen, autohideToolbar, showRenderFrame, showCodeFrame,
       editorMounted, project, semanticValidation, syntaxValidation,
     } = this.state;
+
     return (
       <Window sidebarOpen={sidebarOpen} autohideToolbar={autohideToolbar}>
         {/*<Sidebar>
@@ -375,6 +389,12 @@ class App extends Component<null, State> {
                   showRenderFrame: !showRenderFrame,
                   autohideToolbar: false
                 })}
+              />
+              <IconButton
+                tooltip={`${semanticValidation ? 'Hide' : 'Show'} render frame`}
+                name="code-tags-check"
+                className={semanticValidation ? 'toolbar-icon--enabled' : undefined}
+                onClick={() => this.toggleEditorValidations()}
               />
             </Toolbar>
           </div>

@@ -2,13 +2,9 @@ import { h, Component } from 'preact';
 import { debounce } from 'lodash';
 import MonacoEditor from './MonacoEditor';
 import * as TypeScript from 'typescript';
-import { Abilities, Compiler, Storage } from '../utilities';
+import { Abilities, Compiler } from '../utilities';
 
 interface References { [name: string]: string; }
-
-const LOCAL_STORAGE_PREFIX = 'tspg-cache-';
-
-const notInStorage = (fragment: string) => !Storage.getStorageItem(LOCAL_STORAGE_PREFIX, fragment);
 
 interface Props {
   code?: string;
@@ -22,7 +18,7 @@ interface Props {
 export default class TypeScriptEditor extends Component<Props, void> {
   monaco: typeof monaco;
 
-  definitionSource: string[];
+  definitionSources: { [pathName: string]: string } = {};
 
   compileSource(source: string) {
     const configuration = Compiler.createConfiguration(source);
@@ -45,7 +41,7 @@ export default class TypeScriptEditor extends Component<Props, void> {
     if (this.props.code) {
       this.editorChanged(this.props.code);
     }
-    this.editorChanged = debounce(this.editorChanged, 1000);
+    this.editorChanged = debounce(this.editorChanged, 500);
   }
 
   componentWillReceiveProps(next: Props) {
@@ -63,11 +59,11 @@ export default class TypeScriptEditor extends Component<Props, void> {
   async loadDefinitions(definitions?: References) {
     definitions = definitions || this.props.definitions;
     return Promise.all(
-      Object.keys(definitions).filter(notInStorage).map(key => {
+      Object.keys(definitions).filter(key => !this.definitionSources[key]).map(key => {
         if (definitions) {
           return fetch(definitions[key])
             .then(res => res.text())
-            .then(source => Storage.setStorageItem(LOCAL_STORAGE_PREFIX, key, source));
+            .then(source => { if (source) { this.definitionSources[key] = source; } });
         } else {
           return undefined;
         }
@@ -82,7 +78,7 @@ export default class TypeScriptEditor extends Component<Props, void> {
     const typescriptDefaults = this.monaco.languages.typescript.typescriptDefaults;
     Object.keys(definitions).forEach(key => {
       if (this.props.definitions && !typescriptDefaults[extraLibsKey][key]) {
-        let lib = Storage.getStorageItem(LOCAL_STORAGE_PREFIX, key) as string;
+        let lib = this.definitionSources[key];
         if (lib.indexOf('declare module \'') === -1) {
           const matches = key.match(/(.*)\/(.*).d.ts/);
           lib = `

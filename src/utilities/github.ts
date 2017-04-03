@@ -1,3 +1,4 @@
+import { Definitions } from '../definitions';
 import * as moment from 'moment';
 import * as storage from './storage';
 import * as location from './location';
@@ -216,7 +217,7 @@ export class GistFilesBuilder {
 export async function createGist(
   description: string,
   files: GistFiles,
-  definitions: { [moduleName: string]: string },
+  definitions: Definitions,
   isPublic: boolean = true,
 ) {
   if (!accessToken) { return; }
@@ -253,9 +254,16 @@ export async function addCommentToGist(gistId: string, body: string) {
   return await res.json();
 }
 
-export async function updateGist(gistId: string, description: string, files: GistFiles) {
+export async function updateGist(
+  gistId: string,
+  description: string,
+  files: GistFiles,
+  definitions: Definitions
+) {
   if (!accessToken) { return; }
-  const data = { description, files };
+  const fb = new GistFilesBuilder(files);
+  fb.addFile('definitions.json', JSON.stringify(definitions));
+  const data = { description, files: fb.toFiles() };
   try {
     const res = await fetch(`https://api.github.com/gists/${gistId}`, {
       method: 'PATCH',
