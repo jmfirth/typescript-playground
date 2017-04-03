@@ -1,10 +1,12 @@
 import { h, Component } from 'preact';
 import * as moment from 'moment';
+import * as path from 'path';
 import {
   Buffer,
   Buffers,
   Container,
   CSSEditor,
+  DefinitionsEditor,
   HTMLEditor,
   Icon,
   IconButton,
@@ -218,23 +220,35 @@ class App extends Component<null, State> {
       editorMounted, project, semanticValidation, syntaxValidation,
     } = this.state;
 
-    const extension = show.substring(show.lastIndexOf('.') + 1);
+    const extension = path.extname(show);
     let editorType = '';
+    let iconType = '';
     switch (extension) {
-      case 'ts':
-      case 'tsx':
-      case 'js':
-      case 'jsx':
+      case '.ts':
+      case '.tsx':
+        iconType = 'language-typescript';
         editorType = 'code';
         break;
-      case 'html':
-        editorType = 'html';
+      case '.js':
+      case '.jsx':
+        iconType = 'language-javascript';
+        editorType = 'code';
         break;
-      case 'css':
+      case '.html':
+        editorType = 'html';
+        iconType = 'language-html5';
+        break;
+      case '.css':
         editorType = 'css';
+        iconType = 'language-css3';
+        break;
+      case '.definitions':
+        editorType = 'definitions';
+        iconType = 'code-tags';
         break;
       default:
         editorType = 'code';
+        iconType = 'code-tags';
     }
 
     return (
@@ -317,9 +331,9 @@ class App extends Component<null, State> {
                 onClick={() => this.toggleEditorValidations()}
               />
               <IconButton
-                tooltip="Add TypeScript Definition"
+                tooltip="Manage TypeScript Definitions"
                 name="library-plus"
-                onClick={() => this.loadDefinition()}
+                onClick={() => this.setState({ show: 'project.definitions' })}
               />
             </Toolbar>
           </div>
@@ -351,6 +365,12 @@ class App extends Component<null, State> {
             <Buffers split={showCodeFrame && showRenderFrame}>
               {showCodeFrame && (
                 <Buffer>
+                  <div className="editor-header">
+                    <div className="editor-header-filename">
+                      <Icon className="editor-header-filename-icon" name={iconType} />
+                      {show}
+                    </div>
+                  </div>
                   {editorType === 'code' && (
                     <TypeScriptEditor
                       code={project.files[show] ? project.files[show].content : ''}
@@ -383,6 +403,26 @@ class App extends Component<null, State> {
                       onChange={css => {
                         project.files[show] = project.files[show] || {};
                         project.files[show].content = css;
+                        this.setState({ project });
+                      }}
+                    />
+                  )}
+                  {editorType === 'definitions' && (
+                    <DefinitionsEditor
+                      definitions={project.definitions}
+                      onAddDefinition={() => this.loadDefinition()}
+                      onFilePathChanged={(newFilePath, oldFilePath) => {
+                        const temp = project.definitions[oldFilePath];
+                        delete project.definitions[oldFilePath];
+                        project.definitions[newFilePath] = temp;
+                        this.setState({ project });
+                      }}
+                      onUrlChanged={(filePath, url) => {
+                        project.definitions[filePath] = url;
+                        this.setState({ project });
+                      }}
+                      onRemoveDefinition={(filePath) => {
+                        delete project.definitions[filePath];
                         this.setState({ project });
                       }}
                     />

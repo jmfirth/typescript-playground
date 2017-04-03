@@ -1,4 +1,5 @@
 import CSSEditor from './CSSEditor';
+import DefinitionsEditor from './DefinitionsEditor';
 import HTMLEditor from './HTMLEditor';
 import IconButton from './IconButton';
 import IconLink from './IconLink';
@@ -19,6 +20,7 @@ export {
   Buffers,
   Container,
   CSSEditor,
+  DefinitionsEditor,
   HTMLEditor,
   IconButton,
   IconLink,
