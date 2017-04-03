@@ -163,6 +163,14 @@ body {
   background-color: #1e1e1e;
   color: #fefefe;
 }
+.toolbar-tab .button i {
+  display: none;
+}
+@media only screen and (min-width: 480px) {
+  .toolbar-tab .button i {
+    display: initial;
+  }
+}
 .button:hover {
   background-color: #2e2e2e;
 }

@@ -17,7 +17,7 @@ export default ({ label, name, onClick, selected, tooltip, className }: IconButt
       className={`button ${selected ? 'button-selected' : ''}`}
       onClick={onClick}
     >
-      <Icon name={name} /> {label}
+      <Icon name={name} /><span className="button-label"> {label}</span>
     </button>
     {tooltip && <span className="tooltiptext tooltiptext-left">{tooltip}</span>}
   </div>
