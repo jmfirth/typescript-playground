@@ -223,12 +223,19 @@ export async function createGist(
   if (!accessToken) { return; }
   const fb = new GistFilesBuilder(files);
   fb.addFile('definitions.json', JSON.stringify(definitions));
-  const data = { description, files: fb.toFiles(), public: isPublic };
+  Object.keys(fb.files).forEach(fileName => !fb.files[fileName].content && fb.removeFile(fileName));
+  const data = { description, public: isPublic, files: fb.toFiles() };
   try {
+    debugger;
+    const body = JSON.stringify(data);
+    if (!body) {
+      alert('Fatal error: unprocessable body.  Please file an issue with source!');
+      return;
+    }
     const res = await fetch('https://api.github.com/gists', {
       method: 'POST',
       headers: getAuthorizationHeader(),
-      body: JSON.stringify(data)
+      body
     });
     const gist = await res.json() as Gist;
     try {

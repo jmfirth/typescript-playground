@@ -2,7 +2,7 @@ import * as Definitions from '../definitions';
 
 export const definitions = {
   ...Definitions.defaults,
-  ...{ 'pixi/index.js.d.ts': 'https://unpkg.com/@types/pixi.js@4.4.1/index.d.ts' }
+  ...{ 'pixi.js/index.d.ts': 'https://unpkg.com/@types/pixi.js/index.d.ts' }
 };
 
 export const html = '';
