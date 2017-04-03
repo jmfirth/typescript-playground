@@ -33,7 +33,7 @@ export function createNewProject(
     files: {
       'index.tsx': { content: code } as File,
       'index.html': { content: html } as File,
-      'styles.css': { content: css } as File,
+      'style.css': { content: css } as File,
     }
   } as Project;
 }

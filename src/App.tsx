@@ -1,86 +1,28 @@
 import { h, Component } from 'preact';
-import * as TypeScript from 'typescript';
 import * as moment from 'moment';
 import {
+  Buffer,
+  Buffers,
+  Container,
   CSSEditor,
   HTMLEditor,
   IconButton,
   IconLink,
   RenderFrame,
+  Toolbar,
   TypeScriptEditor,
+  Window,
 } from './components/index';
 import { Github, Location, Project, Storage } from './utilities';
-import * as examples from './examples/index';
+import * as Examples from './examples/index';
 import * as Definitions from './definitions';
 
 const LOCAL_STORAGE_PREFIX = 'tspg-app-';
 const RECENT = 'recent';
 
-interface WindowProps {
-  sidebarOpen?: boolean;
-  children?: JSX.Element | JSX.Element[];
-  autohideToolbar?: boolean;
-}
-interface WindowState {
-  mouseAtTop: boolean;
-}
-/*
-const Window = ({ autohideToolbar, children, sidebarOpen }: WindowProps) => (
-  <div
-    id="window"
-    className={`${sidebarOpen ? 'sidebar-open' : undefined} ${autohideToolbar ? 'autohide-toolbar' : ''}`}
-  >
-    {children}
-  </div>
-);
-*/
-class Window extends Component<WindowProps, WindowState> {
-  state: WindowState = {
-    mouseAtTop: false,
-  };
-
-  handleMouseMove(e: MouseEvent) {
-    if (!this.props.autohideToolbar) { return; }
-    if (!this.state.mouseAtTop && e.clientY < 30) {
-      this.setState({ mouseAtTop: true });
-    } else if (this.state.mouseAtTop && e.clientY > 90) {
-      this.setState({ mouseAtTop: false });
-    }
-  }
-
-  render() {
-    const { autohideToolbar, children, sidebarOpen } = this.props;
-    const { mouseAtTop } = this.state;
-    return (
-      <div
-        id="window"
-        // tslint:disable-next-line max-line-length
-        className={`${sidebarOpen ? 'sidebar-open' : ''} ${autohideToolbar ? 'autohide-toolbar' : ''} ${mouseAtTop ? 'autohide-toolbar--show' : ''}`}
-        onMouseMove={(e: MouseEvent) => this.handleMouseMove(e)}
-      >
-        {children}
-      </div>
-    );
-  }
-}
-
-interface SimpleContainerProps { children?: JSX.Element | JSX.Element[]; }
-// const Sidebar = ({ children }: SimpleContainerProps) => <div id="sidebar">{children}</div>;
-const Container = ({ children }: SimpleContainerProps) => <div id="container">{children}</div>;
-const Toolbar = ({ children }: SimpleContainerProps) => <div id="toolbar">{children}</div>;
-const Buffer = ({ children }: SimpleContainerProps) => <div className="buffer">{children}</div>;
-
-interface BufferProps {
-  split?: boolean;
-  children?: JSX.Element | JSX.Element[];
-}
-const Buffers = ({ split, children }: BufferProps) =>
-  <div id="buffers" className={split ? 'buffers-split' : undefined}>{children}</div>;
-
 interface State {
   show: string;
   transpiled: string;
-  diagnostics: TypeScript.Diagnostic[];
   semanticValidation: boolean;
   syntaxValidation: boolean;
   editorMounted: boolean;
@@ -98,7 +40,6 @@ class App extends Component<null, State> {
     show: 'code',
     editorMounted: false,
     transpiled: '',
-    diagnostics: [],
     authenticated: false,
     sidebarOpen: false,
     user: undefined,
@@ -107,8 +48,8 @@ class App extends Component<null, State> {
     showRenderFrame: true,
     showCodeFrame: true,
     // This line disables errors in jsx tags like <div>, etc.
-    syntaxValidation: false,
-    semanticValidation: false,
+    syntaxValidation: true,
+    semanticValidation: true,
   };
 
   async componentWillMount() {
@@ -117,10 +58,10 @@ class App extends Component<null, State> {
     if (gistId && await this.loadGist(gistId)) { return; }
     this.setState({
       project: Project.createNewProject(
-        examples.preact.code,
-        examples.preact.html,
-        examples.preact.css,
-        examples.preact.definitions
+        Examples.pixijs.code,
+        Examples.pixijs.html,
+        Examples.pixijs.css,
+        Examples.pixijs.definitions
       )
     });
   }
@@ -204,8 +145,8 @@ class App extends Component<null, State> {
       if (!this.state.project) {
         throw new Error('Fatal error: project not found.  Please copy your source and reload.');
       }
-      const defaultDescription = 'From TypeScript Playground';
-      const description = prompt('Description of gist', defaultDescription) || defaultDescription;
+      const description = prompt('Description of gist', this.state.project.description);
+      if (!description) { return; }
       const gist = await Github.createGist(description, this.state.project.files, this.state.project.definitions);
       if (!gist) {
         throw new Error('Could not create a Gist.  If Github status is fine, we are sorry!  Please file an issue.');
@@ -369,7 +310,7 @@ class App extends Component<null, State> {
               <IconButton
                 tooltip={`${autohideToolbar ? 'Disable' : 'Enable'} toolbar auto-hide`}
                 name="arrow-expand-all" // "fullscreen"
-                className={autohideToolbar ? 'toolbar-icon--enabled' : undefined}
+                className={`hide-mobile ${autohideToolbar ? 'toolbar-icon--enabled' : ''}`}
                 onClick={() => showCodeFrame && this.setState({ autohideToolbar: !autohideToolbar})}
               />
               <IconButton
