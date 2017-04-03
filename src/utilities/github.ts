@@ -226,7 +226,6 @@ export async function createGist(
   Object.keys(fb.files).forEach(fileName => !fb.files[fileName].content && fb.removeFile(fileName));
   const data = { description, public: isPublic, files: fb.toFiles() };
   try {
-    debugger;
     const body = JSON.stringify(data);
     if (!body) {
       alert('Fatal error: unprocessable body.  Please file an issue with source!');
