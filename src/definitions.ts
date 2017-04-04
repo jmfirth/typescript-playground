@@ -1,7 +1,7 @@
 export type Definitions = { [path: string]: string; };
 
 export const defaults = {
-  'node/index.d.ts': 'https://unpkg.com/@types/node/index.d.ts',
+  // 'node/index.d.ts': 'https://unpkg.com/@types/node/index.d.ts',
 };
 
 export const threeDefinitions: Definitions = {

@@ -29,22 +29,28 @@ export interface CompilerResult {
   emitResult: TypeScript.EmitResult;
 }
 
-export function createConfiguration(source: string) {
+export function createConfiguration(files: EditorSourceFile[], entry: string) {
   let jsxFactory = '';
-  const matches = source.match(/\/\*.*\s.*@jsx\s(..)\*.*\//);
-  if (matches && matches.length > 1) {
-    jsxFactory = matches[1].toString().trim();
+  const jsxFactories = files.map(file => {
+    const matches = file.source.match(/\/\*.*\s.*@jsx\s(..)\*.*\//);
+    if (matches && matches.length > 1) {
+      return matches[1].toString().trim();
+    }
+    return;
+  }).filter(Boolean);
+  if (jsxFactories && jsxFactories.length > 0) {
+    jsxFactory = (jsxFactories[0] || '').toString().trim();
   }
   return  {
     sourceBundle: {
-      entry: 'index.tsx',
-      files: [createEditorSourceFile('index.tsx', source)],
+      entry,
+      files,
     },
     compilerOptions: {
       outFile: 'bundle.js',
       module: TypeScript.ModuleKind.AMD,
       target: TypeScript.ScriptTarget.ES5,
-      lib: ['es6', 'dom', 'node'],
+      // lib: ['es6', 'dom', 'node'],
       jsx: TypeScript.JsxEmit.React,
       jsxFactory: !!jsxFactory ? 'h' : undefined,
       allowJs: true,
@@ -63,7 +69,7 @@ export function compile(sourceBundle: SourceBundle, options: TypeScript.Compiler
       languageVersion: TypeScript.ScriptTarget,
       onError?: (message: string) => void,
     ): TypeScript.SourceFile => {
-      const matches = sourceBundle.files.filter(file => fileName.indexOf(file.fileName) > -1);
+      const matches = sourceBundle.files.filter(file => file.fileName.indexOf(fileName) > -1);
       if (matches.length) {
         const file = matches[0];
         return TypeScript.createSourceFile(
@@ -82,7 +88,7 @@ export function compile(sourceBundle: SourceBundle, options: TypeScript.Compiler
       outputFiles[_filename] = _content;
     },
 
-    getCurrentDirectory: () => './', // TypeScript.sys.getCurrentDirectory(),
+    getCurrentDirectory: () => '', // TypeScript.sys.getCurrentDirectory(),
 
     getCanonicalFileName: fileName => /*TypeScript.sys.useCaseSensitiveFileNames*/ true
       ? fileName : fileName.toLowerCase(),
@@ -103,9 +109,15 @@ export function compile(sourceBundle: SourceBundle, options: TypeScript.Compiler
     },
 
     resolveModuleNames(_moduleNames: string[], _containingFile: string): TypeScript.ResolvedModule[] {
-      return _moduleNames.map(moduleName => ({
-        resolvedFileName: moduleName.slice(1) + '.tsx',
-      }));
+      const moduleNames = _moduleNames.map(moduleName => {
+        let matches = sourceBundle.files.filter(file => file.fileName.indexOf(moduleName) > -1);
+        if (matches.length) {
+          return { resolvedFileName: matches[0].fileName };
+        } else {
+          return { resolvedFileName: `__extraneous__${moduleName}.tsx` };
+        }
+      });
+      return moduleNames;
     },
 
     getDirectories(_path: string): string[] {

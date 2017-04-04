@@ -17,12 +17,62 @@ import {
   TypeScriptEditor,
   Window,
 } from './components/index';
-import { Abilities, Github, Location, Project, Storage } from './utilities';
+import { Abilities, Compiler, Github, Location, Project, Storage } from './utilities';
 import * as Examples from './examples/index';
 import * as Definitions from './definitions';
 
 const LOCAL_STORAGE_PREFIX = 'tspg-app-';
 const RECENT = 'recent';
+
+function getDisplayFromFilePath(filePath: string) {
+  const extension = path.extname(filePath);
+  let editorType = '';
+  let iconType = '';
+  switch (extension) {
+    case '.ts':
+    case '.tsx':
+      iconType = 'language-typescript';
+      editorType = 'code';
+      break;
+    case '.js':
+    case '.jsx':
+      iconType = 'language-javascript';
+      editorType = 'code';
+      break;
+    case '.html':
+      editorType = 'html';
+      iconType = 'language-html5';
+      break;
+    case '.css':
+      editorType = 'css';
+      iconType = 'language-css3';
+      break;
+    case '.definitions':
+      editorType = 'definitions';
+      iconType = 'code-tags';
+      break;
+    default:
+      editorType = 'code';
+      iconType = 'code-tags';
+  }
+  return { editorType, iconType };
+}
+
+function compileSource(project: Project.Project) {
+    const entry = './index.tsx';
+    const sourceFiles = Object.keys(project.files)
+      .filter(filePath => getDisplayFromFilePath(filePath).editorType === 'code')
+      .map(filePath => Compiler.createEditorSourceFile(filePath, project.files[filePath].content, filePath === entry));
+    const configuration = Compiler.createConfiguration(sourceFiles, entry);
+    const result = Compiler.compile(configuration.sourceBundle, configuration.compilerOptions);
+    if (!result.emitResult.emitSkipped) {
+      return result;
+    } else {
+      // @TODO - handle error
+      // console.log('Error compiling source'); // tslint:disable-line no-console
+    }
+    return null;
+  }
 
 interface State {
   show: string;
@@ -41,7 +91,7 @@ interface State {
 
 class App extends Component<null, State> {
   state: State = {
-    show: 'index.tsx',
+    show: './index.tsx',
     editorMounted: false,
     transpiled: '',
     authenticated: false,
@@ -83,6 +133,20 @@ class App extends Component<null, State> {
 
   saveSource(source: string) {
     Storage.setStorageItem(LOCAL_STORAGE_PREFIX, RECENT, source, moment().add(6, 'months').toDate());
+  }
+
+  addCodeFile() {
+    const { project } = this.state;
+    if (!project) { return; }
+    let filePath: string | null;
+    while (filePath = prompt('Enter the name of a code file.  Please use a ts or tsx extension for now.')) {
+        const ext = path.extname(filePath);
+        if (ext === '.ts' || ext === '.tsx') { break; }
+    }
+    if (!filePath) { return; }
+    if (!filePath.startsWith('./')) { filePath = `./${filePath}`; }
+    project.files[filePath] = Project.createFile();
+    this.setState({ project });
   }
 
   createNewProject() {
@@ -210,7 +274,7 @@ class App extends Component<null, State> {
         semanticValidation: !semanticValidation,
         syntaxValidation: !semanticValidation,
       }),
-      150
+      0
     );
   }
 
@@ -219,37 +283,7 @@ class App extends Component<null, State> {
       authenticated, show, sidebarOpen, autohideToolbar, showRenderFrame, showCodeFrame,
       editorMounted, project, semanticValidation, syntaxValidation,
     } = this.state;
-
-    const extension = path.extname(show);
-    let editorType = '';
-    let iconType = '';
-    switch (extension) {
-      case '.ts':
-      case '.tsx':
-        iconType = 'language-typescript';
-        editorType = 'code';
-        break;
-      case '.js':
-      case '.jsx':
-        iconType = 'language-javascript';
-        editorType = 'code';
-        break;
-      case '.html':
-        editorType = 'html';
-        iconType = 'language-html5';
-        break;
-      case '.css':
-        editorType = 'css';
-        iconType = 'language-css3';
-        break;
-      case '.definitions':
-        editorType = 'definitions';
-        iconType = 'code-tags';
-        break;
-      default:
-        editorType = 'code';
-        iconType = 'code-tags';
-    }
+    const { editorType, iconType } = getDisplayFromFilePath(show);
 
     return (
       <Window sidebarOpen={sidebarOpen} autohideToolbar={autohideToolbar}>
@@ -260,6 +294,11 @@ class App extends Component<null, State> {
               tooltip="New Project"
               name="folder-plus"
               onClick={() => this.createNewProject()}
+            />
+            <IconButton
+              tooltip="New File"
+              name="file"
+              onClick={() => this.addCodeFile()}
             />
             {authenticated && (
               <IconButton
@@ -281,27 +320,19 @@ class App extends Component<null, State> {
           </Toolbar>
           <div id="sidebar-content">
             <ul className="sidebar-tree">
-              <li
-                className={`${show === 'index.tsx' ? 'selected' : ''}`}
-                onClick={() => this.setState({ show: 'index.tsx' })}
-              >
-                <Icon name="language-typescript" className="sidebar-file-icon" />
-                <span>index.tsx</span>
-              </li>
-              <li
-                className={`${show === 'index.html' ? 'selected' : ''}`}
-                onClick={() => this.setState({ show: 'index.html' })}
-              >
-                <Icon name="language-html5" className="sidebar-file-icon" />
-                <span>index.html</span>
-              </li>
-              <li
-                className={`${show === 'style.css' ? 'selected' : ''}`}
-                onClick={() => this.setState({ show: 'style.css' })}
-              >
-                <Icon name="language-css3" className="sidebar-file-icon" />
-                <span>style.css</span>
-              </li>
+              {project && Object.keys(project.files).map(filePath => (
+                <li
+                  className={`${show === filePath ? 'selected' : ''}`}
+                  onClick={() => {
+                    // @TODO - figure out how to reload monaco
+                    this.setState({ show: '' });
+                    setTimeout(() => this.setState({ show: filePath }), 0);
+                  }}
+                >
+                  <Icon name={getDisplayFromFilePath(filePath).iconType} className="sidebar-file-icon" />
+                  <span>{filePath.slice(2)}</span>
+                </li>
+              ))}
             </ul>
           </div>
           <div id="sidebar-footer">
@@ -368,16 +399,92 @@ class App extends Component<null, State> {
                   <div className="editor-header">
                     <div className="editor-header-filename">
                       <Icon className="editor-header-filename-icon" name={iconType} />
-                      {show}
+                      {show.slice(2)}
                     </div>
                   </div>
-                  {editorType === 'code' && (
+                  {Object.keys(project.files).map(filePath => {
+                    if (show !== filePath) { return; }
+                    const display = getDisplayFromFilePath(filePath);
+                    let editor: JSX.Element | undefined;
+                    switch (display.editorType) {
+                      case 'code':
+                        editor = (
+                          <TypeScriptEditor
+                            code={project.files[filePath] ? project.files[filePath].content : ''}
+                            onChange={(source) => {
+                              project.files[filePath] = project.files[filePath] || {};
+                              project.files[filePath].content = source;
+                              const result = compileSource(project);
+                              if (!result) { return; }
+                              this.setState({ project, transpiled: result.source || '' });
+                            }}
+                            diagnosticOptions={{
+                              noSemanticValidation: !semanticValidation,
+                              noSyntaxValidation: !syntaxValidation,
+                            }}
+                            definitions={project.definitions}
+                            editorDidMount={() => this.setState({ editorMounted: true })}
+                          />
+                        );
+                        break;
+                      case 'html':
+                        editor = (
+                          <HTMLEditor
+                            code={project.files[filePath] ? project.files[filePath].content : ''}
+                            onChange={html => {
+                              project.files[filePath] = project.files[filePath] || {};
+                              project.files[filePath].content = html;
+                              this.setState({ project });
+                            }}
+                          />
+                        );
+                        break;
+                      case 'css':
+                        editor = (
+                          <CSSEditor
+                            code={project.files[filePath] ? project.files[filePath].content : ''}
+                            onChange={css => {
+                              project.files[filePath] = project.files[filePath] || {};
+                              project.files[filePath].content = css;
+                              this.setState({ project });
+                            }}
+                          />
+                        );
+                        break;
+                      default:
+                        break;
+                    }
+                    return editor;
+                  })}
+                  {editorType === 'definitions' && (
+                    <DefinitionsEditor
+                      definitions={project.definitions}
+                      onAddDefinition={() => this.loadDefinition()}
+                      onFilePathChanged={(newFilePath, oldFilePath) => {
+                        const temp = project.definitions[oldFilePath];
+                        delete project.definitions[oldFilePath];
+                        project.definitions[newFilePath] = temp;
+                        this.setState({ project });
+                      }}
+                      onUrlChanged={(definitionFilePath, url) => {
+                        project.definitions[definitionFilePath] = url;
+                        this.setState({ project });
+                      }}
+                      onRemoveDefinition={(definitionFilePath) => {
+                        delete project.definitions[definitionFilePath];
+                        this.setState({ project });
+                      }}
+                    />
+                  )}
+                  {/*editorType === 'code' && (
                     <TypeScriptEditor
                       code={project.files[show] ? project.files[show].content : ''}
-                      onChange={(source, transpiled, diagnostics) => {
+                      onChange={(source) => {
                         project.files[show] = project.files[show] || {};
                         project.files[show].content = source;
-                        this.setState({ project, transpiled: transpiled || '' });
+                        const result = compileSource(project);
+                        if (!result) { return; }
+                        this.setState({ project, transpiled: result.source || '' });
                       }}
                       diagnosticOptions={{
                         noSemanticValidation: !semanticValidation,
@@ -426,7 +533,7 @@ class App extends Component<null, State> {
                         this.setState({ project });
                       }}
                     />
-                  )}
+                  )*/}
                 </Buffer>
               )}
               {showRenderFrame && (
@@ -434,8 +541,8 @@ class App extends Component<null, State> {
                   {editorMounted && project && (
                     <RenderFrame
                       code={this.state.transpiled}
-                      html={project.files['index.html'] ? project.files['index.html'].content : ''}
-                      css={project.files['style.css'] ? project.files['style.css'].content : ''}
+                      html={project.files['./index.html'] ? project.files['./index.html'].content : ''}
+                      css={project.files['./style.css'] ? project.files['./style.css'].content : ''}
                     />
                   )}
                 </Buffer>

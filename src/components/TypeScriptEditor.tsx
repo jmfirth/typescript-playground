@@ -1,8 +1,7 @@
 import { h, Component } from 'preact';
 import { debounce } from 'lodash';
 import MonacoEditor from './MonacoEditor';
-import * as TypeScript from 'typescript';
-import { Abilities, Compiler } from '../utilities';
+import { Abilities } from '../utilities';
 
 interface References { [name: string]: string; }
 
@@ -10,7 +9,7 @@ interface Props {
   code?: string;
   transpile?: boolean;
   editorDidMount?: (editor: monaco.editor.IEditor, mod: typeof monaco) => void;
-  onChange?: (code: string, transpiled?: string, diagnostics?: TypeScript.Diagnostic[]) => void;
+  onChange?: (code: string) => void;
   diagnosticOptions?: monaco.languages.typescript.DiagnosticsOptions;
   definitions?: References;
 }
@@ -19,17 +18,6 @@ export default class TypeScriptEditor extends Component<Props, void> {
   monaco: typeof monaco;
 
   definitionSources: { [pathName: string]: string } = {};
-
-  compileSource(source: string) {
-    const configuration = Compiler.createConfiguration(source);
-    const result = Compiler.compile(configuration.sourceBundle, configuration.compilerOptions);
-    if (!result.emitResult.emitSkipped) {
-      return result;
-    } else {
-      console.log('transpile error'); // tslint:disable-line no-console
-    }
-    return null;
-  }
 
   shouldComponentUpdate() {
     return false;
@@ -114,13 +102,16 @@ declare module '${matches ? matches[1] : key}' {
   }
 
   editorChanged(code: string, event?: monaco.editor.IModelContentChangedEvent2) {
-    const { onChange, transpile = true } = this.props;
-    if (onChange && transpile) {
-      const result = this.compileSource(code);
-      if (result) {
-        onChange(code, result.source, result.diagnostics);
-      }
-    } else if (onChange) {
+    // const { onChange, transpile = true } = this.props;
+    // if (onChange && transpile) {
+    //   const result = this.compileSource(code);
+    //   if (result) {
+    //     onChange(code, result.source, result.diagnostics);
+    //   }
+    // } else
+
+    const { onChange } = this.props;
+    if (onChange) {
       onChange(code);
     }
   }

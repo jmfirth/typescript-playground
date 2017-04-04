@@ -1,4 +1,5 @@
 import * as Github from './github';
+// import * as Compiler from './compiler';
 import * as Definitions from '../definitions';
 
 export interface Project {
@@ -12,8 +13,13 @@ export interface Project {
 }
 
 export interface File {
-  language: string;
   content: string;
+}
+
+type Files = { [filePath: string]: File };
+
+export function createFile(content: string = ''): File {
+  return { content };
 }
 
 export function createNewProject(
@@ -31,18 +37,41 @@ export function createNewProject(
     public: isPublic,
     definitions,
     files: {
-      'index.tsx': { content: code } as File,
-      'index.html': { content: html } as File,
-      'style.css': { content: css } as File,
-    }
+      './index.tsx': createFile(code),
+      './index.html': createFile(html),
+      './style.css': createFile(css),
+    },
   } as Project;
+}
+
+export class FilesBuilder {
+  files: Files = {};
+
+  constructor(files?: Files) {
+    if (files) {
+      Object.keys(files).forEach(filePath => {
+        if (filePath === 'definitions.json') { return; }
+        this.files[gistToRelativePath(filePath)] = files[filePath];
+      });
+    }
+  }
+
+  toFiles = () => this.files;
+
+  addFile = (fileName: string, content: string = '') => content && (this.files[fileName] = { content });
+
+  removeFile = (fileName: string) => delete this.files[fileName];
+}
+
+function gistToRelativePath(gistPath: string) {
+  return `./${gistPath.replace(/___/g, '/')}`;
 }
 
 export function createProjectFromGist(gist: Github.Gist): Project {
   let files = gist.files;
   const definitions = files['definitions.json'] ? JSON.parse(files['definitions.json'].content) : Definitions.defaults;
   if (definitions) {
-    const fb = new Github.GistFilesBuilder(gist.files);
+    const fb = new FilesBuilder(gist.files);
     fb.removeFile('definitions.json');
     files = fb.toFiles();
   }

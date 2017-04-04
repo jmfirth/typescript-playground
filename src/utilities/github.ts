@@ -203,7 +203,7 @@ export class GistFilesBuilder {
 
   constructor(files?: GistFiles) {
     if (files) {
-      this.files = files;
+      Object.keys(files).forEach(filePath => { this.files[relativeToGistPath(filePath)] = files[filePath]; });
     }
   }
 
@@ -212,6 +212,11 @@ export class GistFilesBuilder {
   addFile = (fileName: string, content: string = '') => content && (this.files[fileName] = { content });
 
   removeFile = (fileName: string) => delete this.files[fileName];
+}
+
+function relativeToGistPath(filePath: string) {
+  let path = filePath.startsWith('./') ? filePath.slice(2) : filePath;
+  return path.replace(/\//g, '___');
 }
 
 export async function createGist(
