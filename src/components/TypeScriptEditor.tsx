@@ -64,19 +64,18 @@ export default class TypeScriptEditor extends Component<Props, void> {
     await this.loadDefinitions(definitions);
     const extraLibsKey = '_extraLibs';
     const typescriptDefaults = this.monaco.languages.typescript.typescriptDefaults;
-    typescriptDefaults[extraLibsKey] = {};
+    // typescriptDefaults[extraLibsKey] = {};
     Object.keys(definitions).forEach(key => {
-      let lib = this.definitionSources[key];
-      if (lib.indexOf('declare module \'') === -1) {
-        const matches = key.match(/(.*)\/(.*).d.ts/);
-        lib = `
-declare module '${matches ? matches[1] : key}' {
-${lib}
-}
-`;
-        typescriptDefaults[extraLibsKey][key] = lib;
-      }
-      /*
+//       let lib = this.definitionSources[key];
+//       if (lib.indexOf('declare module \'') === -1) {
+//         const matches = key.match(/(.*)\/(.*).d.ts/);
+//         lib = `
+// declare module '${matches ? matches[1] : key}' {
+// ${lib}
+// }
+// `;
+//         typescriptDefaults[extraLibsKey][key] = lib;
+//       }
       if (this.props.definitions && !typescriptDefaults[extraLibsKey][key]) {
         let lib = this.definitionSources[key];
         if (lib.indexOf('declare module \'') === -1) {
@@ -89,7 +88,6 @@ declare module '${matches ? matches[1] : key}' {
         }
         typescriptDefaults.addExtraLib(lib, key);
       }
-      */
     });
   }
 
