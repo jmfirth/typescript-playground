@@ -72,7 +72,7 @@ export const EditorHeader = ({ iconType, label }: EditorHeaderProps) => (
   <div className="editor-header">
     <div className="editor-header-filename">
       <Icon className="editor-header-filename-icon" name={iconType} />
-      {label}
+      <span className="editor-header-filename-label">{label}</span>
     </div>
   </div>
 );

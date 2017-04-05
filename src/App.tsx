@@ -254,9 +254,16 @@ class App extends Component<null, State> {
   render() {
     const {
       authenticated, show, sidebarOpen, autohideToolbar, showRenderFrame, showCodeFrame,
-      editorMounted, project, semanticValidation, syntaxValidation, theme
+      editorMounted, project, semanticValidation, syntaxValidation, theme, user
     } = this.state;
     const { editorType, iconType } = Project.getDisplayFromFilePath(show);
+
+    let sidebarHeaderIcon = 'folder';
+    if (user && project && project.id === user.id.toString()) {
+      sidebarHeaderIcon = 'folder-lock-open';
+    } else if (project && project.id) {
+      sidebarHeaderIcon = 'folder-lock';
+    }
 
     return (
       <Window sidebarOpen={sidebarOpen} autohideToolbar={autohideToolbar} theme={theme}>
@@ -292,6 +299,14 @@ class App extends Component<null, State> {
             }
           </Toolbar>
           <SidebarContent>
+            <EditorHeader
+              iconType={(
+                user && project && project.id === user.id.toString()
+                ? 'folder-lock-open'
+                : (project && project.id ? 'folder-lock' : 'folder')
+              )}
+              label={project && project.id || 'Local'}
+            />
             {project && (
               <ProjectFilesTreeView
                 filePaths={Object.keys(project.files)}

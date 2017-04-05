@@ -305,7 +305,10 @@ class MonacoEditor extends Component<Props, State> {
         label: 'Move Up A Block',
         // An optional array of keybindings for the action.
         // tslint:disable-next-line no-bitwise
-        keybindings: [monaco.KeyMod.WinCtrl | monaco.KeyCode.UpArrow],
+        keybindings: [
+          monaco.KeyMod.WinCtrl | monaco.KeyCode.UpArrow, // tslint:disable-line no-bitwise
+          monaco.KeyMod.CtrlCmd | monaco.KeyCode.UpArrow, // tslint:disable-line no-bitwise
+        ],
         keybindingContext: null,
         contextMenuGroupId: 'navigation',
         contextMenuOrder: 1.5,
@@ -324,7 +327,10 @@ class MonacoEditor extends Component<Props, State> {
         label: 'MoveDownUp A Block',
         // An optional array of keybindings for the action.
         // tslint:disable-next-line no-bitwise
-        keybindings: [monaco.KeyMod.WinCtrl | monaco.KeyCode.DownArrow],
+        keybindings: [
+          monaco.KeyMod.WinCtrl | monaco.KeyCode.DownArrow, // tslint:disable-line no-bitwise
+          monaco.KeyMod.CtrlCmd | monaco.KeyCode.DownArrow, // tslint:disable-line no-bitwise
+        ],
         keybindingContext: null,
         contextMenuGroupId: 'navigation',
         contextMenuOrder: 1.5,
@@ -342,8 +348,10 @@ class MonacoEditor extends Component<Props, State> {
         // A label of the action that will be presented to the user.
         label: 'Select Up A Block',
         // An optional array of keybindings for the action.
-        // tslint:disable-next-line no-bitwise
-        keybindings: [monaco.KeyMod.Shift | monaco.KeyMod.WinCtrl | monaco.KeyCode.UpArrow],
+        keybindings: [
+          monaco.KeyMod.Shift | monaco.KeyMod.WinCtrl | monaco.KeyCode.UpArrow, // tslint:disable-line no-bitwise
+          monaco.KeyMod.Shift | monaco.KeyMod.CtrlCmd | monaco.KeyCode.UpArrow, // tslint:disable-line no-bitwise
+        ],
         keybindingContext: null,
         contextMenuGroupId: 'navigation',
         contextMenuOrder: 1.5,
@@ -366,7 +374,10 @@ class MonacoEditor extends Component<Props, State> {
         label: 'Select Down A Block',
         // An optional array of keybindings for the action.
         // tslint:disable-next-line no-bitwise
-        keybindings: [monaco.KeyMod.Shift | monaco.KeyMod.WinCtrl | monaco.KeyCode.DownArrow],
+        keybindings: [
+          monaco.KeyMod.Shift | monaco.KeyMod.WinCtrl | monaco.KeyCode.DownArrow, // tslint:disable-line no-bitwise
+          monaco.KeyMod.Shift | monaco.KeyMod.CtrlCmd | monaco.KeyCode.DownArrow, // tslint:disable-line no-bitwise
+        ],
         keybindingContext: null,
         contextMenuGroupId: 'navigation',
         contextMenuOrder: 1.5,
@@ -451,7 +462,7 @@ function afterBlock(
     const line = document.getLineContent(index);
     return index === boundary || startedBlock && !line.trim()
       ? index
-      : afterBlock(document, step, boundary, index + step, startedBlock || !line.trim());
+      : afterBlock(document, step, boundary, index + step, startedBlock || !!line.trim());
 }
 
 function anchorPosition(selection: monaco.Selection, position: monaco.Position) {

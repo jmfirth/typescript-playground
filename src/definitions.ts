@@ -53,7 +53,7 @@ export const lodashDefinitions = { };
 
 export const definitionList: { [moduleName: string]: Definitions } = {
   'three': threeDefinitions,
-  'preact': preactDefinitions,
+  // 'preact': preactDefinitions,
   // 'react': reactDefinitions,
   // 'react-dom': reactDomDefinitions,
   // 'pixi.js': pixijsDefinitions,
