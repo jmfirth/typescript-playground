@@ -545,6 +545,10 @@ yellow: rgba(240, 198, 116, 1)
   /*color: #efefef;*/
 }
 
+.vs-dark .mtk4 {
+  color: rgba(215, 90, 100, 1);
+}
+
 /*numbers*/
 .vs-dark .mtk6 {
   color: rgba(215, 90, 100, 1);
