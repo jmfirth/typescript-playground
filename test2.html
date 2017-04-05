@@ -1,0 +1,40 @@
+
+<html>
+  <head>
+    <style type="text/css">
+
+    </style>
+  </head>
+  <body>
+<div id="root" />
+  </body>
+  <script src="https://pkgzip.com/?react@15.4.2,react-dom@15.4.2,react-router@latest,react-router-dom@latest"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/systemjs/0.20.11/system.js"></script>
+  <script>
+System.config({
+  baseURL: 'https://browserify-cdn.abstractsequential.com/standalone/',
+});
+SystemJS.set(SystemJS.resolveSync('react'), SystemJS.newModule(window.pkgzip['react']));
+SystemJS.set(SystemJS.resolveSync('react-dom'), SystemJS.newModule(window.pkgzip['react-dom']));
+SystemJS.set(SystemJS.resolveSync('react-router'), SystemJS.newModule(window.pkgzip['react-router']));
+SystemJS.set(SystemJS.resolveSync('react-router-dom'), SystemJS.newModule(window.pkgzip['react-router-dom']));
+var define = System.amdDefine;
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+define("index", ["require", "exports", "react", "react-dom"], function (require, exports, React, react_dom_1) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    react_dom_1.render(React.createElement('h1', null, 'Hi'), document.getElementById('root'));
+});
+
+System.import("index");
+  </script>
+</html>

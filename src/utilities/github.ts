@@ -1,3 +1,4 @@
+import { ModuleMap } from './project';
 import { Definitions } from '../definitions';
 import * as moment from 'moment';
 import * as storage from './storage';
@@ -223,11 +224,13 @@ export async function createGist(
   description: string,
   files: GistFiles,
   definitions: Definitions,
+  packages: ModuleMap,
   isPublic: boolean = true,
 ) {
   if (!accessToken) { return; }
   const fb = new GistFilesBuilder(files);
   fb.addFile('definitions.json', JSON.stringify(definitions));
+  fb.addFile('modules.json', JSON.stringify(packages));
   Object.keys(fb.files).forEach(fileName => !fb.files[fileName].content && fb.removeFile(fileName));
   const data = { description, public: isPublic, files: fb.toFiles() };
   try {
@@ -269,11 +272,13 @@ export async function updateGist(
   gistId: string,
   description: string,
   files: GistFiles,
-  definitions: Definitions
+  definitions: Definitions,
+  modules: ModuleMap
 ) {
   if (!accessToken) { return; }
   const fb = new GistFilesBuilder(files);
   fb.addFile('definitions.json', JSON.stringify(definitions));
+  fb.addFile('modules.json', JSON.stringify(modules));
   const data = { description, files: fb.toFiles() };
   try {
     const res = await fetch(`https://api.github.com/gists/${gistId}`, {

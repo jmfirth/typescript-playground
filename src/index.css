@@ -457,7 +457,7 @@ td.center {
   overflow-y: hidden;
 }
 .tree-view {
-  color: #fefefe;
+  color: #ccc;
 }
 #window.light .tree-view {
   color: #000;

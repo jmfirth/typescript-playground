@@ -4,6 +4,7 @@ import HTMLEditor from './HTMLEditor';
 import IconButton from './IconButton';
 import IconLink from './IconLink';
 import Icon from './Icon';
+import ModulesEditor from './ModulesEditor';
 import ProjectFilesTreeView from './ProjectFilesTreeView';
 import RenderFrame from './RenderFrame';
 import TreeView from './TreeView';
@@ -31,6 +32,7 @@ export {
   IconButton,
   IconLink,
   Icon,
+  ModulesEditor,
   ProjectFilesTreeView,
   RenderFrame,
   Sidebar,

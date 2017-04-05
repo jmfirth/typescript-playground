@@ -11,6 +11,7 @@ import {
   HTMLEditor,
   IconButton,
   IconLink,
+  ModulesEditor,
   ProjectFilesTreeView,
   RenderFrame,
   Sidebar,
@@ -188,7 +189,12 @@ class App extends Component<null, State> {
       }
       const description = prompt('Description of gist', this.state.project.description);
       if (!description) { return; }
-      const gist = await Github.createGist(description, this.state.project.files, this.state.project.definitions);
+      const gist = await Github.createGist(
+        description,
+        this.state.project.files,
+        this.state.project.definitions,
+        this.state.project.modules,
+      );
       if (!gist) {
         throw new Error('Could not create a Gist.  If Github status is fine, we are sorry!  Please file an issue.');
       }
@@ -209,7 +215,13 @@ class App extends Component<null, State> {
       if (!current || !current.id) {
         throw new Error('Fatal error: project not found.  Please copy your source and reload.');
       }
-      const gist = await Github.updateGist(current.id, current.description, current.files, current.definitions);
+      const gist = await Github.updateGist(
+        current.id,
+        current.description,
+        current.files,
+        current.definitions,
+        current.modules
+      );
       if (!gist) {
         throw new Error('Could not create a Gist.  If Github status is fine, we are sorry!  Please file an issue.');
       }
@@ -297,6 +309,16 @@ class App extends Component<null, State> {
             {!authenticated &&
               <IconLink tooltip="Login to Github" name="github-circle" url={Github.GITHUB_OAUTH_URL} />
             }
+            <IconButton
+              tooltip={`Show ${theme === 'dark' ? 'light' : 'dark'} theme.`}
+              name="theme-light-dark"
+              onClick={() => {
+                if (!project) { return; }
+                const p = { ...project };
+                p.editorOptions.theme = p.editorOptions.theme === 'vs-dark' ? 'vs-light' : 'vs-dark';
+                this.setState({ project: p, theme: theme === 'dark' ? 'light' : 'dark' });
+              }}
+            />
           </Toolbar>
           <SidebarContent>
             <EditorHeader
@@ -320,16 +342,6 @@ class App extends Component<null, State> {
           <SidebarFooter>
             <Toolbar>
               <IconButton
-                tooltip={`Show ${theme === 'dark' ? 'light' : 'dark'} theme.`}
-                name="theme-light-dark"
-                onClick={() => {
-                  if (!project) { return; }
-                  const p = { ...project };
-                  p.editorOptions.theme = p.editorOptions.theme === 'vs-dark' ? 'vs-light' : 'vs-dark';
-                  this.setState({ project: p, theme: theme === 'dark' ? 'light' : 'dark' });
-                }}
-              />
-              <IconButton
                 tooltip={`${showCodeFrame ? 'Hide' : 'Show'} code frame`}
                 name="code-tags"
                 className={showCodeFrame ? 'toolbar-icon--enabled' : undefined}
@@ -352,6 +364,11 @@ class App extends Component<null, State> {
                 name="code-tags-check"
                 className={semanticValidation ? 'toolbar-icon--enabled' : undefined}
                 onClick={() => this.toggleEditorValidations()}
+              />
+              <IconButton
+                tooltip="Manage Modules"
+                name="library-plus"
+                onClick={() => this.setState({ show: 'project.modules' })}
               />
               <IconButton
                 tooltip="Manage TypeScript Definitions"
@@ -462,6 +479,38 @@ class App extends Component<null, State> {
                       }}
                     />
                   )}
+                  {editorType === 'modules' && (
+                    <ModulesEditor
+                      modules={project.modules}
+                      onAddModule={() => {
+                        const moduleName = prompt('Module name:', 'react');
+                        if (!moduleName) { return; }
+                        const moduleVersion = prompt('Module version:', 'latest');
+                        if (!moduleVersion) { return; }
+                        const p = { ...project };
+                        p.modules[moduleName] = moduleVersion;
+                        this.setState({ editorMounted: false });
+                        setTimeout(() => this.setState({ project: p, editorMounted: true }), 50);
+                      }}
+                      onModuleNameChanged={(oldModuleName, newModuleName) => {
+                        const p = { ...project };
+                        const temp = p.modules[oldModuleName];
+                        delete p.modules[oldModuleName];
+                        p.modules[newModuleName] = temp;
+                        this.setState({ project: p });
+                      }}
+                      onModuleVersionChanged={(moduleName, moduleVersion) => {
+                        const p = { ...project };
+                        p.modules[moduleName] = moduleVersion;
+                        this.setState({ project: p });
+                      }}
+                      onRemoveModule={(moduleName) => {
+                        const p = { ...project };
+                        delete p.modules[moduleName];
+                        this.setState({ project: p });
+                      }}
+                    />
+                  )}
                 </Buffer>
               )}
               {showRenderFrame && (
@@ -471,6 +520,14 @@ class App extends Component<null, State> {
                       code={this.state.transpiled}
                       html={project.files['./index.html'] ? project.files['./index.html'].content : ''}
                       css={project.files['./style.css'] ? project.files['./style.css'].content : ''}
+                      modules={project.modules /* {
+                        'react': '15.4.2',
+                        'react-dom': '15.4.2',
+                        'react-router': 'latest',
+                        'react-router-dom': 'latest'
+                        // 'preact': 'latest',
+                        // 'preact-router': 'latest'
+                      }*/}
                     />
                   )}
                 </Buffer>

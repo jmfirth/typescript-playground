@@ -1,0 +1,61 @@
+<html>
+  <head>
+    <style type="text/css">
+
+    </style>
+  </head>
+  <body>
+<div id="root" />
+  </body>
+  <script src="https://pkgzip.com/?react,react-dom,react-router,react-router-dom"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/systemjs/0.20.11/system.js"></script>
+  <script>
+console.log(window.pkgzip);
+System.config({
+  baseURL: 'https://browserify-cdn.abstractsequential.com/standalone/',
+});
+// SystemJS.set(SystemJS.resolveSync('react'), SystemJS.newModule(window.pkgzip['react']));
+SystemJS.set(SystemJS.resolveSync('react-dom'), SystemJS.newModule(window.pkgzip['react-dom']));
+SystemJS.set(SystemJS.resolveSync('react-router'), SystemJS.newModule(window.pkgzip['react-router']));
+SystemJS.set(SystemJS.resolveSync('react-router-dom'), SystemJS.newModule(window.pkgzip['react-router-dom']));
+// System.import('react', () => { debugger; }, () => { debugger; });
+System.import('react', () => SystemJS.newModule(window.pkgzip['react']));
+debugger;
+var define = System.amdDefine;
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+define("app", ["require", "exports", "react", "react-router-dom"], function (require, exports, React, react_router_dom_1) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var App = (function (_super) {
+        __extends(App, _super);
+        function App() {
+            return _super !== null && _super.apply(this, arguments) || this;
+        }
+        App.prototype.render = function () {
+            console.log(React, react_router_dom_1);
+            return (React.createElement(react_router_dom_1.BrowserRouter, null,
+                React.createElement("h1", null, "Hello world!")));
+        };
+        return App;
+    }(React.Component));
+    exports.default = App;
+});
+define("index", ["require", "exports", "react", "react-dom", "react-router-dom"], function (require, exports, React, react_dom_1, react_router_dom_1) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    console.log(react_router_dom_1);
+    react_dom_1.render(React.createElement("h1", null, "hi"), document.body);
+});
+
+System.import("index");
+  </script>
+</html>

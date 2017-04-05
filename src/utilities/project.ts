@@ -4,6 +4,8 @@ import * as Github from './github';
 // import * as Compiler from './compiler';
 import * as Definitions from '../definitions';
 
+export type ModuleMap = { [moduleName: string]: string };
+
 export interface Project {
   type: 'local' | 'gist';
   id?: string;
@@ -11,6 +13,7 @@ export interface Project {
   description: string;
   public: boolean;
   definitions: { [key: string]: string };
+  modules: ModuleMap;
   files: { [path: string]: File };
   editorOptions: monaco.editor.IEditorOptions;
 }
@@ -45,6 +48,12 @@ export function createNewProject(
   html: string = '',
   css: string = '',
   definitions: Definitions.Definitions = Definitions.defaults,
+  modules: ModuleMap = {
+    // 'react': '15.4.2',
+    // 'react-dom': '15.4.2',
+    // 'react-router': 'latest',
+    // 'react-router-dom': 'latest'
+  },
   isPublic: boolean = true,
 ): Project {
   return {
@@ -54,6 +63,7 @@ export function createNewProject(
     description: 'TypeScript Playground Project',
     public: isPublic,
     definitions,
+    modules,
     files: {
       './index.tsx': createFile(code),
       './index.html': createFile(html),
@@ -69,7 +79,7 @@ export class FilesBuilder {
   constructor(files?: Files) {
     if (files) {
       Object.keys(files).forEach(filePath => {
-        if (filePath === 'definitions.json') { return; }
+        if (filePath === 'definitions.json' || filePath === 'modules.json') { return; }
         this.files[gistToRelativePath(filePath)] = files[filePath];
       });
     }
@@ -87,19 +97,20 @@ function gistToRelativePath(gistPath: string) {
 }
 
 export function createProjectFromGist(gist: Github.Gist): Project {
-  let files = gist.files;
-  const definitions = files['definitions.json'] ? JSON.parse(files['definitions.json'].content) : Definitions.defaults;
-  if (definitions) {
-    const fb = new FilesBuilder(gist.files);
-    fb.removeFile('definitions.json');
-    files = fb.toFiles();
-  }
+  const definitions = gist.files['definitions.json']
+    ? JSON.parse(gist.files['definitions.json'].content)
+    : Definitions.defaults;
+  const modules = gist.files['modules.json']
+    ? JSON.parse(gist.files['modules.json'].content)
+    : {};
+  let files = new FilesBuilder(gist.files).toFiles();
   return {
     type: 'gist',
     id: gist.id,
     ownerId: gist.owner.id ? gist.owner.id.toString() : undefined,
     description: gist.description,
     definitions,
+    modules,
     public: gist.public,
     files: files,
     editorOptions: defaultEditorOptions,
@@ -139,6 +150,10 @@ export function getDisplayFromFilePath(filePath: string) {
       break;
     case '.definitions':
       editorType = 'definitions';
+      iconType = 'code-tags';
+      break;
+    case '.modules':
+      editorType = 'modules';
       iconType = 'code-tags';
       break;
     default:
