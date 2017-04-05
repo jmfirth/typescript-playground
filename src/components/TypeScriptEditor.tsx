@@ -1,7 +1,6 @@
 import { h, Component } from 'preact';
 import { debounce } from 'lodash';
 import MonacoEditor from './MonacoEditor';
-import { Abilities } from '../utilities';
 
 interface References { [name: string]: string; }
 
@@ -10,12 +9,14 @@ interface Props {
   transpile?: boolean;
   editorDidMount?: (editor: monaco.editor.IEditor, mod: typeof monaco) => void;
   onChange?: (code: string) => void;
+  editorOptions?: monaco.editor.IEditorOptions;
   diagnosticOptions?: monaco.languages.typescript.DiagnosticsOptions;
   definitions?: References;
 }
 
 export default class TypeScriptEditor extends Component<Props, void> {
   monaco: typeof monaco;
+  editor: monaco.editor.IEditor;
 
   definitionSources: { [pathName: string]: string } = {};
 
@@ -33,9 +34,15 @@ export default class TypeScriptEditor extends Component<Props, void> {
   }
 
   componentWillReceiveProps(next: Props) {
-    if (this.monaco) {
-      this.addLanguageDefinitions(next.definitions);
+    // debugger;
+    if (this.editor && next.editorOptions) {
+      // console.log('updating editor options');
+      this.editor.updateOptions(next.editorOptions);
     }
+    // const missingDefinitions = next.def
+    // if () {
+    //   this.addLanguageDefinitions(next.definitions);
+    // }
   }
 
   fixWebWorkers() {
@@ -125,24 +132,14 @@ declare module '${matches ? matches[1] : key}' {
         width="100%"
         language="typescript"
         defaultValue={this.props.code}
-        options={{
-          lineNumbers: 'on',
-          lineNumbersMinChars: 3,
-          theme: 'vs-dark',
-          fontSize: Abilities.isMobile() ? 16 : 13,
-          // cursorBlinking: 'off',
-          automaticLayout: true,
-          wrappingIndent: 'same',
-          parameterHints: true,
-          // formatOnType: true,
-          // formatOnPaste: true,
-          tabCompletion: true,
-          folding: true,
-        }}
+        options={this.props.editorOptions}
         requireConfig={requireConfig}
         onChange={(code, event) => this.editorChanged(code, event)}
-        // editorWillMount={monaco => this.monaco = monaco}
-        editorDidMount={(editor, m) => this.editorMounted(editor, m)}
+        editorWillMount={monaco => { this.monaco = monaco; }}
+        editorDidMount={(editor, m) => {
+          this.editor = editor;
+          this.editorMounted(editor, m);
+        }}
         diagnosticOptions={this.props.diagnosticOptions}
       />
     );

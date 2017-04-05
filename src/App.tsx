@@ -7,12 +7,15 @@ import {
   Container,
   CSSEditor,
   DefinitionsEditor,
+  EditorHeader,
   HTMLEditor,
-  Icon,
   IconButton,
   IconLink,
+  ProjectFilesTreeView,
   RenderFrame,
   Sidebar,
+  SidebarContent,
+  SidebarFooter,
   Toolbar,
   TypeScriptEditor,
   Window,
@@ -24,44 +27,10 @@ import * as Definitions from './definitions';
 const LOCAL_STORAGE_PREFIX = 'tspg-app-';
 const RECENT = 'recent';
 
-function getDisplayFromFilePath(filePath: string) {
-  const extension = path.extname(filePath);
-  let editorType = '';
-  let iconType = '';
-  switch (extension) {
-    case '.ts':
-    case '.tsx':
-      iconType = 'language-typescript';
-      editorType = 'code';
-      break;
-    case '.js':
-    case '.jsx':
-      iconType = 'language-javascript';
-      editorType = 'code';
-      break;
-    case '.html':
-      editorType = 'html';
-      iconType = 'language-html5';
-      break;
-    case '.css':
-      editorType = 'css';
-      iconType = 'language-css3';
-      break;
-    case '.definitions':
-      editorType = 'definitions';
-      iconType = 'code-tags';
-      break;
-    default:
-      editorType = 'code';
-      iconType = 'code-tags';
-  }
-  return { editorType, iconType };
-}
-
 function compileSource(project: Project.Project) {
     const entry = './index.tsx';
     const sourceFiles = Object.keys(project.files)
-      .filter(filePath => getDisplayFromFilePath(filePath).editorType === 'code')
+      .filter(filePath => Project.getDisplayFromFilePath(filePath).editorType === 'code')
       .map(filePath => Compiler.createEditorSourceFile(filePath, project.files[filePath].content, filePath === entry));
     const configuration = Compiler.createConfiguration(sourceFiles, entry);
     const result = Compiler.compile(configuration.sourceBundle, configuration.compilerOptions);
@@ -76,6 +45,7 @@ function compileSource(project: Project.Project) {
 
 interface State {
   show: string;
+  theme: 'light' | 'dark';
   transpiled: string;
   semanticValidation: boolean;
   syntaxValidation: boolean;
@@ -91,6 +61,7 @@ interface State {
 
 class App extends Component<null, State> {
   state: State = {
+    theme: 'dark',
     show: './index.tsx',
     editorMounted: false,
     transpiled: '',
@@ -102,8 +73,8 @@ class App extends Component<null, State> {
     showRenderFrame: true,
     showCodeFrame: true,
     // This line disables errors in jsx tags like <div>, etc.
-    syntaxValidation: true,
-    semanticValidation: true,
+    syntaxValidation: false,
+    semanticValidation: false,
   };
 
   async componentWillMount() {
@@ -159,10 +130,11 @@ class App extends Component<null, State> {
     if (!project) { return; }
     const moduleName = prompt('Module name', 'react');
     if (!moduleName) { return; }
+    const p = { ...project }; // intentional copy
     // @TODO: helpful defaults!
     const definitions = Definitions.definitionList[moduleName];
     if (definitions) {
-      project.definitions = {
+      p.definitions = {
         ...project.definitions,
         ...definitions
       };
@@ -177,9 +149,10 @@ class App extends Component<null, State> {
       const lastUrlPart = definitionUrl.substring(definitionUrl.lastIndexOf('/') + 1);
       const matches = lastUrlPart.match(/(.*).d.ts$/);
       const fileName = matches ? matches[1] : 'index';
-      project.definitions[`${moduleName}/${fileName}.d.ts`] = definitionUrl;
+
+      p.definitions[`${moduleName}/${fileName}.d.ts`] = definitionUrl;
     }
-    this.setState({ project });
+    this.setState({ project: p });
   }
 
   async loadGist(gistId: string) {
@@ -281,12 +254,12 @@ class App extends Component<null, State> {
   render() {
     const {
       authenticated, show, sidebarOpen, autohideToolbar, showRenderFrame, showCodeFrame,
-      editorMounted, project, semanticValidation, syntaxValidation,
+      editorMounted, project, semanticValidation, syntaxValidation, theme
     } = this.state;
-    const { editorType, iconType } = getDisplayFromFilePath(show);
+    const { editorType, iconType } = Project.getDisplayFromFilePath(show);
 
     return (
-      <Window sidebarOpen={sidebarOpen} autohideToolbar={autohideToolbar}>
+      <Window sidebarOpen={sidebarOpen} autohideToolbar={autohideToolbar} theme={theme}>
         <div id="sidebar-overlay" onClick={() => this.setState({ sidebarOpen: false })} />
         <Sidebar>
           <Toolbar>
@@ -318,25 +291,29 @@ class App extends Component<null, State> {
               <IconLink tooltip="Login to Github" name="github-circle" url={Github.GITHUB_OAUTH_URL} />
             }
           </Toolbar>
-          <div id="sidebar-content">
-            <ul className="sidebar-tree">
-              {project && Object.keys(project.files).map(filePath => (
-                <li
-                  className={`${show === filePath ? 'selected' : ''}`}
-                  onClick={() => {
-                    // @TODO - figure out how to reload monaco
-                    this.setState({ show: '' });
-                    setTimeout(() => this.setState({ show: filePath }), 0);
-                  }}
-                >
-                  <Icon name={getDisplayFromFilePath(filePath).iconType} className="sidebar-file-icon" />
-                  <span>{filePath.slice(2)}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div id="sidebar-footer">
+          <SidebarContent>
+            {project && (
+              <ProjectFilesTreeView
+                filePaths={Object.keys(project.files)}
+                onClick={(filePath: string) => {
+                  this.setState({ show: '' });
+                  setTimeout(() => this.setState({ show: filePath }), 0);
+                }}
+              />
+            )}
+          </SidebarContent>
+          <SidebarFooter>
             <Toolbar>
+              <IconButton
+                tooltip={`Show ${theme === 'dark' ? 'light' : 'dark'} theme.`}
+                name="theme-light-dark"
+                onClick={() => {
+                  if (!project) { return; }
+                  const p = { ...project };
+                  p.editorOptions.theme = p.editorOptions.theme === 'vs-dark' ? 'vs-light' : 'vs-dark';
+                  this.setState({ project: p, theme: theme === 'dark' ? 'light' : 'dark' });
+                }}
+              />
               <IconButton
                 tooltip={`${showCodeFrame ? 'Hide' : 'Show'} code frame`}
                 name="code-tags"
@@ -367,44 +344,37 @@ class App extends Component<null, State> {
                 onClick={() => this.setState({ show: 'project.definitions' })}
               />
             </Toolbar>
-          </div>
+          </SidebarFooter>
         </Sidebar>
         <Container>
-          <div id="toolbar-container">
-            <Toolbar>
-              <IconButton
-                name="menu"
-                onClick={() => this.setState({ sidebarOpen: !sidebarOpen })}
-              />
-              <div
-                className="toolbar-title is-contenteditable"
-                contentEditable={true}
-                onInput={(e) => this.onDescriptionInput(e)}
-              >
-                {project && project.description}
-              </div>
-              <div className="spacer" />
-              <IconButton
-                tooltip={`${autohideToolbar ? 'Disable' : 'Enable'} toolbar auto-hide`}
-                name="arrow-expand-all" // "fullscreen"
-                className={`hide-mobile ${autohideToolbar ? 'toolbar-icon--enabled' : ''}`}
-                onClick={() => showCodeFrame && this.setState({ autohideToolbar: !autohideToolbar})}
-              />
-            </Toolbar>
-          </div>
+          <Toolbar>
+            <IconButton
+              name="menu"
+              onClick={() => this.setState({ sidebarOpen: !sidebarOpen })}
+            />
+            <div
+              className="toolbar-title is-contenteditable"
+              contentEditable={true}
+              onInput={(e) => this.onDescriptionInput(e)}
+            >
+              {project && project.description}
+            </div>
+            <div className="spacer" />
+            <IconButton
+              tooltip={`${autohideToolbar ? 'Disable' : 'Enable'} toolbar auto-hide`}
+              name="arrow-expand-all" // "fullscreen"
+              className={`hide-mobile ${autohideToolbar ? 'toolbar-icon--enabled' : ''}`}
+              onClick={() => showCodeFrame && this.setState({ autohideToolbar: !autohideToolbar})}
+            />
+          </Toolbar>
           {project && (
             <Buffers split={showCodeFrame && showRenderFrame}>
               {showCodeFrame && (
                 <Buffer>
-                  <div className="editor-header">
-                    <div className="editor-header-filename">
-                      <Icon className="editor-header-filename-icon" name={iconType} />
-                      {show.slice(2)}
-                    </div>
-                  </div>
+                  <EditorHeader iconType={iconType} label={show.slice(2)} />
                   {Object.keys(project.files).map(filePath => {
                     if (show !== filePath) { return; }
-                    const display = getDisplayFromFilePath(filePath);
+                    const display = Project.getDisplayFromFilePath(filePath);
                     let editor: JSX.Element | undefined;
                     switch (display.editorType) {
                       case 'code':
@@ -422,6 +392,7 @@ class App extends Component<null, State> {
                               noSemanticValidation: !semanticValidation,
                               noSyntaxValidation: !syntaxValidation,
                             }}
+                            editorOptions={project.editorOptions}
                             definitions={project.definitions}
                             editorDidMount={() => this.setState({ editorMounted: true })}
                           />
@@ -476,64 +447,6 @@ class App extends Component<null, State> {
                       }}
                     />
                   )}
-                  {/*editorType === 'code' && (
-                    <TypeScriptEditor
-                      code={project.files[show] ? project.files[show].content : ''}
-                      onChange={(source) => {
-                        project.files[show] = project.files[show] || {};
-                        project.files[show].content = source;
-                        const result = compileSource(project);
-                        if (!result) { return; }
-                        this.setState({ project, transpiled: result.source || '' });
-                      }}
-                      diagnosticOptions={{
-                        noSemanticValidation: !semanticValidation,
-                        noSyntaxValidation: !syntaxValidation,
-                      }}
-                      definitions={project.definitions}
-                      editorDidMount={() => this.setState({ editorMounted: true })}
-                    />
-                  )}
-                  {editorType === 'html' && (
-                    <HTMLEditor
-                      code={project.files[show] ? project.files[show].content : ''}
-                      onChange={html => {
-                        project.files[show] = project.files[show] || {};
-                        project.files[show].content = html;
-                        this.setState({ project });
-                      }}
-                    />
-                  )}
-                  {editorType === 'css' && (
-                    <CSSEditor
-                      code={project.files[show] ? project.files[show].content : ''}
-                      onChange={css => {
-                        project.files[show] = project.files[show] || {};
-                        project.files[show].content = css;
-                        this.setState({ project });
-                      }}
-                    />
-                  )}
-                  {editorType === 'definitions' && (
-                    <DefinitionsEditor
-                      definitions={project.definitions}
-                      onAddDefinition={() => this.loadDefinition()}
-                      onFilePathChanged={(newFilePath, oldFilePath) => {
-                        const temp = project.definitions[oldFilePath];
-                        delete project.definitions[oldFilePath];
-                        project.definitions[newFilePath] = temp;
-                        this.setState({ project });
-                      }}
-                      onUrlChanged={(filePath, url) => {
-                        project.definitions[filePath] = url;
-                        this.setState({ project });
-                      }}
-                      onRemoveDefinition={(filePath) => {
-                        delete project.definitions[filePath];
-                        this.setState({ project });
-                      }}
-                    />
-                  )*/}
                 </Buffer>
               )}
               {showRenderFrame && (

@@ -4,13 +4,18 @@ import HTMLEditor from './HTMLEditor';
 import IconButton from './IconButton';
 import IconLink from './IconLink';
 import Icon from './Icon';
+import ProjectFilesTreeView from './ProjectFilesTreeView';
 import RenderFrame from './RenderFrame';
+import TreeView from './TreeView';
 import TypeScriptEditor from './TypeScriptEditor';
 import {
   Buffer,
   Buffers,
   Container,
+  EditorHeader,
   Sidebar,
+  SidebarContent,
+  SidebarFooter,
   Toolbar,
   Window
 } from './Layout';
@@ -21,13 +26,18 @@ export {
   Container,
   CSSEditor,
   DefinitionsEditor,
+  EditorHeader,
   HTMLEditor,
   IconButton,
   IconLink,
   Icon,
+  ProjectFilesTreeView,
   RenderFrame,
   Sidebar,
+  SidebarContent,
+  SidebarFooter,
   Toolbar,
+  TreeView,
   TypeScriptEditor,
   Window
 };
