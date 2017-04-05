@@ -48,8 +48,14 @@ export const Sidebar = ({ children }: SimpleContainerProps) => <div id="sidebar"
 export const SidebarContent = ({ children }: SimpleContainerProps) => <div id="sidebar-content">{children}</div>;
 export const SidebarFooter = ({ children }: SimpleContainerProps) => <div id="sidebar-footer">{children}</div>;
 export const Container = ({ children }: SimpleContainerProps) => <div id="container">{children}</div>;
-export const Toolbar = ({ children }: SimpleContainerProps) => (
-  <div id="toolbar-container">
+
+interface ToolbarProps {
+  children?: JSX.Element | JSX.Element[];
+  className?: string;
+}
+
+export const Toolbar = ({ children, className }: ToolbarProps) => (
+  <div id="toolbar-container" className={className}>
     <div id="toolbar">{children}</div>
   </div>
 );

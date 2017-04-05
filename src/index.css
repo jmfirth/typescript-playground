@@ -111,9 +111,6 @@ body {
   background-color: #1e1e1e;
   color: #ccc;
 }
-#window.sidebar-open #sidebar-content {
-  height: 100vh;
-}
 #window.light #sidebar-content {
   background-color: #d2d2d2;
   color: #000;
@@ -155,7 +152,7 @@ body {
   margin-right: 7px;
 }
 
-#window.autohide-toolbar #toolbar-container {
+#window.autohide-toolbar #toolbar-container.toolbar-main {
   display: none;
   position: absolute;
   top: 0;
@@ -163,7 +160,7 @@ body {
   right: 0;
   z-index: 10;
 }
-#window.autohide-toolbar.autohide-toolbar--show #toolbar-container {
+#window.autohide-toolbar.autohide-toolbar--show #toolbar-container.toolbar-main {
   display: block;
 }
 #toolbar {

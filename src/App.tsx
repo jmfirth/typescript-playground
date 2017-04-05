@@ -379,7 +379,7 @@ class App extends Component<null, State> {
           </SidebarFooter>
         </Sidebar>
         <Container>
-          <Toolbar>
+          <Toolbar className="toolbar-main">
             <IconButton
               name="menu"
               onClick={() => this.setState({ sidebarOpen: !sidebarOpen })}
