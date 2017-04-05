@@ -49,34 +49,51 @@ interface Props {
 }
 
 export default class RenderFrame extends Component<Props, null> {
+  container: HTMLDivElement | undefined;
+
+  iframe: HTMLIFrameElement | undefined;
+
+  shouldComponentUpdate() {
+    return false;
+  }
+
+  componentWillReceiveProps(next: Props) {
+    if (next.code !== this.props.code
+     || next.html !== this.props.html
+     || next.css !== this.props.css
+     || next.modules !== this.props.modules) {
+      this.loadIframe(next.code, next.css, next.html, next.modules);
+    }
+  }
+
+  loadIframe(code: string, css: string, html: string, modules?: ModuleMap) {
+    if (!this.iframe) { return; }
+    const win: Window = this.iframe.contentWindow
+                          || this.iframe.contentDocument.documentElement
+                          || this.iframe.contentDocument;
+    win.document.open();
+    win.document.write(getIFrameSource(code, css, html, modules));
+    win.document.close();
+  }
+
   render() {
     const { code, css, html, modules } = this.props;
     return (
-      <iframe
-        ref={(iframe: HTMLIFrameElement) => {
-          setTimeout(
-            () => {
-              try {
-                let frame: Window = iframe.contentWindow
-                                 || iframe.contentDocument.documentElement
-                                 || iframe.contentDocument;
-                // iframe.src = "https://mytesturl";
-                frame.document.clear();
-                frame.document.open();
-                frame.document.write(getIFrameSource(code, css, html, modules));
-                frame.document.close();
-              } catch (e) { /*...*/ }
-            },
-            0
-          );
+      <div
+        style={{ width: '100%', height: '100%' }}
+        ref={(c: HTMLDivElement) => {
+          if (!c) {
+            this.container = undefined;
+            this.iframe = undefined;
+            return;
+          }
+          this.container = c;
+          this.container.innerText = '';
+          this.iframe = document.createElement('iframe');
+          this.iframe.className = 'surface';
+          this.container.appendChild(this.iframe);
+          setTimeout(() => this.loadIframe(code, css, html, modules), 0);
         }}
-        name="request"
-        className="surface"
-        sandbox="allow-forms allow-scripts allow-same-origin allow-modals allow-popups allow-top-navigation"
-        allowFullScreen={true}
-        frameBorder="0"
-        // href="/"
-        // srcDoc={getIFrameSource(code, css, html, modules)}
       />
     );
   }
