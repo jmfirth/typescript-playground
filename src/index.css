@@ -111,6 +111,9 @@ body {
   background-color: #1e1e1e;
   color: #ccc;
 }
+#window.sidebar-open #sidebar-content {
+  height: 100vh;
+}
 #window.light #sidebar-content {
   background-color: #d2d2d2;
   color: #000;
@@ -171,7 +174,10 @@ body {
   align-items: center;
 }
 #toolbar {
-  color: #fefefe;
+  background-color: #121212;
+}
+#window.light #toolbar {
+  background-color: #c2c2c2;
 }
 .toolbar-title {
   font-size: 18px;
