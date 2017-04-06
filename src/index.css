@@ -485,18 +485,46 @@ body {
   height: 100%;
   width: 100%;
   overflow: scroll;
-  font-family: Menlo, Monaco, "Courier New", monospace;
+  font-family: 'Source Code Pro', Menlo, Consolas, monospace;
   font-weight: normal;
   font-size: 13px;
   line-height: 20px;
+  overflow: scroll;
 }
 #definitions-editor {
   background-color: #1e1e1e;
-  color: #fefefe;
+  color: #ccc;
 }
 #window.light #definitions-editor {
   background-color: #d4d4d4;
-  color: #212121
+  color: #616161
+}
+#definitions-editor table {
+  padding: 25px;
+}
+#definitions-editor tr th,
+#definitions-editor tr td {
+  padding-left: 7px;
+}
+#definitions-editor tr th:first-child,
+#definitions-editor tr td:first-child {
+  width: 60px;
+  text-align: center;
+}
+#definitions-editor tr:first-child td {
+  border-top: 2px solid #fefefe;
+}
+#window.light #definitions-editor tr:first-child td {
+  border-top: 2px solid #212121;
+}
+#definitions-editor th {
+  text-align: left;
+}
+#definitions-editor th {
+  color: #fefefe;
+}
+#window.light #definitions-editor th {
+  color: #616161;
 }
 
 td.center {

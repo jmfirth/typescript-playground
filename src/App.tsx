@@ -443,7 +443,7 @@ class App extends Component<null, State> {
             <Buffers split={showCodeFrame && showRenderFrame}>
               {showCodeFrame && (
                 <Buffer>
-                  <EditorHeader iconType={iconType} label={show.slice(2)} />
+                  <EditorHeader iconType={iconType} label={show.startsWith('./') ? show.slice(2) : show} />
                   {Object.keys(project.files).map(filePath => {
                     if (show !== filePath) { return; }
                     const display = Project.getDisplayFromFilePath(filePath);
