@@ -138,7 +138,7 @@ body {
   height: calc(100vh - 80px);
   /*height: calc(100vh - 80px - 8px);
   width: calc(200px - 8px);*/
-  font-size: 16px;
+  font-size: 13px;
   line-height: 20px;
 }
 #sidebar-content {
@@ -200,7 +200,7 @@ body {
 */
 .sidebar-file-icon {
   font-size: 14px;
-  margin-right: 7px;
+  margin: 0 7px;
 }
 
 #window.autohide-toolbar #toolbar-container.toolbar-main {
@@ -284,21 +284,21 @@ body {
 #buffers {
   width: calc(100% - 12px);
   height: calc(100% - 46px);
+}
+#buffers {
   border-right: 6px solid #121212;
   border-left: 6px solid #121212;
 }
+#window.light #buffers {
+  border-right: 6px solid #c2c2c2;
+  border-left: 6px solid #c2c2c2;
+}
 @media only screen and (min-width: 768px) {
   #buffers {
-  /*width: 100%;*/
-    /*border-left: none;
-    border-right: none;*/
     width: calc(100% - 6px);
     height: calc(100% - 40px);
   }
   #window.sidebar-open #buffers {
-  /*width: 100%;*/
-    /*border-left: none;
-    border-right: none;*/
     border-left: none;
     width: 100%;
   }
@@ -325,10 +325,6 @@ body {
   #window.light .buffer {
     border-right: 6px solid #c2c2c2;
   }
-  /*.buffer:last-child {
-    border-bottom: none;
-    border-right: none;
-  }*/
 }
 @media screen and (orientation: portrait) {
   .buffer {
@@ -614,6 +610,7 @@ td.center {
   color: yellow;
 }
 .tree-view_item > span {
+  font-family: 'Source Code Pro', Menlo, Consolas, monospace !important;
   font-weight: bold;
 }
 .tree-view_item > span {
@@ -622,8 +619,10 @@ td.center {
 #window.light .tree-view_item > span {
   color: #0000FF;
 }
-.tree-view_item--clickable {
+.tree-view_item.tree-view_item--clickable > span {
   cursor: pointer;
+  font-weight: normal;
+  color: #ccc;
 }
 
 /*
@@ -769,3 +768,11 @@ yellow: rgba(240, 198, 116, 1)
 .quickfix-widget .monaco-tree-row {
 }
 */
+
+div.view-lines {
+  font-family: 'Source Code Pro', Menlo, Consolas, monospace !important;
+}
+
+/*body {
+  font-family: 'Meslo LG L DZ for Powerline';
+}*/

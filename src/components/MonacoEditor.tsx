@@ -310,8 +310,8 @@ class MonacoEditor extends Component<Props, State> {
           monaco.KeyMod.CtrlCmd | monaco.KeyCode.UpArrow, // tslint:disable-line no-bitwise
         ],
         keybindingContext: null,
-        contextMenuGroupId: 'navigation',
-        contextMenuOrder: 1.5,
+        // contextMenuGroupId: 'navigation',
+        // contextMenuOrder: 1.5,
         // Method that will be executed when the action is triggered.
         // @param editor The editor instance is passed in as a convinience
         run: (ed: monaco.editor.IEditor) => {
@@ -324,7 +324,7 @@ class MonacoEditor extends Component<Props, State> {
         // An unique identifier of the contributed action.
         id: 'space-block-jumper_move-down',
         // A label of the action that will be presented to the user.
-        label: 'MoveDownUp A Block',
+        label: 'Move Down A Block',
         // An optional array of keybindings for the action.
         // tslint:disable-next-line no-bitwise
         keybindings: [
@@ -332,8 +332,8 @@ class MonacoEditor extends Component<Props, State> {
           monaco.KeyMod.CtrlCmd | monaco.KeyCode.DownArrow, // tslint:disable-line no-bitwise
         ],
         keybindingContext: null,
-        contextMenuGroupId: 'navigation',
-        contextMenuOrder: 1.5,
+        // contextMenuGroupId: 'navigation',
+        // contextMenuOrder: 1.5,
         // Method that will be executed when the action is triggered.
         // @param editor The editor instance is passed in as a convinience
         run: (ed: monaco.editor.IEditor) => {
@@ -353,8 +353,8 @@ class MonacoEditor extends Component<Props, State> {
           monaco.KeyMod.Shift | monaco.KeyMod.CtrlCmd | monaco.KeyCode.UpArrow, // tslint:disable-line no-bitwise
         ],
         keybindingContext: null,
-        contextMenuGroupId: 'navigation',
-        contextMenuOrder: 1.5,
+        // contextMenuGroupId: 'navigation',
+        // contextMenuOrder: 1.5,
         // Method that will be executed when the action is triggered.
         // @param editor The editor instance is passed in as a convinience
         run: (ed: monaco.editor.IEditor) => {
@@ -379,8 +379,8 @@ class MonacoEditor extends Component<Props, State> {
           monaco.KeyMod.Shift | monaco.KeyMod.CtrlCmd | monaco.KeyCode.DownArrow, // tslint:disable-line no-bitwise
         ],
         keybindingContext: null,
-        contextMenuGroupId: 'navigation',
-        contextMenuOrder: 1.5,
+        // contextMenuGroupId: 'navigation',
+        // contextMenuOrder: 1.5,
         // Method that will be executed when the action is triggered.
         // @param editor The editor instance is passed in as a convinience
         run: (ed: monaco.editor.IEditor) => {
@@ -392,6 +392,21 @@ class MonacoEditor extends Component<Props, State> {
           return null;
         }
       });
+
+      // add a command from the editor
+      // this.editor.addCommand(monaco.KeyMod.Shift | monaco.KeyMod.CtrlCmd | monaco.KeyCode.RightArrow, () => {
+      //   debugger;
+      // });
+      /*
+      pass in like
+      {
+        command: keycodes,
+        fn:
+      }
+      */
+      // this.editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KEY_B, () => {
+
+      // });
 
       // After initializing monaco editor
       this.editorDidMount(this.editor, this.monaco);

@@ -29,20 +29,30 @@ const LOCAL_STORAGE_PREFIX = 'tspg-app-';
 const RECENT = 'recent';
 
 function compileSource(project: Project.Project) {
-    const entry = './index.tsx';
-    const sourceFiles = Object.keys(project.files)
-      .filter(filePath => Project.getDisplayFromFilePath(filePath).editorType === 'code')
-      .map(filePath => Compiler.createEditorSourceFile(filePath, project.files[filePath].content, filePath === entry));
-    const configuration = Compiler.createConfiguration(sourceFiles, entry);
-    const result = Compiler.compile(configuration.sourceBundle, configuration.compilerOptions);
-    if (!result.emitResult.emitSkipped) {
-      return result;
-    } else {
-      // @TODO - handle error
-      // console.log('Error compiling source'); // tslint:disable-line no-console
-    }
-    return null;
+  const entry = './index.tsx';
+  const sourceFiles = Object.keys(project.files)
+    .filter(filePath => Project.getDisplayFromFilePath(filePath).editorType === 'code')
+    .map(filePath => Compiler.createEditorSourceFile(filePath, project.files[filePath].content, filePath === entry));
+  const configuration = Compiler.createConfiguration(sourceFiles, entry);
+  const result = Compiler.compile(configuration.sourceBundle, configuration.compilerOptions);
+  if (!result.emitResult.emitSkipped) {
+    return result;
+  } else {
+    // @TODO - handle error
+    // console.log('Error compiling source'); // tslint:disable-line no-console
   }
+  return null;
+}
+
+interface Command {
+  combination: any; // tslint:disable-line no-any
+  action: () => void;
+}
+
+ // tslint:disable-next-line no-any
+function createCommand(combination: any, action: () => void): Command {
+  return { combination, action };
+}
 
 interface State {
   show: string;
@@ -105,6 +115,25 @@ class App extends Component<null, State> {
 
   saveSource(source: string) {
     Storage.setStorageItem(LOCAL_STORAGE_PREFIX, RECENT, source, moment().add(6, 'months').toDate());
+  }
+
+  createCommands(): Command[] {
+    return [
+      /* tslint:disable no-bitwise */
+      createCommand(
+        monaco.KeyMod.CtrlCmd | monaco.KeyCode.KEY_B,
+        () => this.setState({ sidebarOpen: !this.state.sidebarOpen })
+      ),
+      createCommand(
+        monaco.KeyMod.CtrlCmd | monaco.KeyCode.KEY_B,
+        () => this.setState({ sidebarOpen: !this.state.sidebarOpen })
+      ),
+      createCommand(
+        monaco.KeyMod.CtrlCmd | monaco.KeyCode.KEY_B,
+        () => this.setState({ sidebarOpen: !this.state.sidebarOpen })
+      ),
+      /* tslint:enable no-bitwise */
+    ];
   }
 
   addCodeFile() {
@@ -328,7 +357,7 @@ class App extends Component<null, State> {
                 ? 'folder-lock-open'
                 : (project && project.id ? 'folder-lock' : 'folder')
               )}
-              label={project && project.id || 'Local'}
+              label={project && project.id || 'local'}
             />
             {project && (
               <ProjectFilesTreeView
