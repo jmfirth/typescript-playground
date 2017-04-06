@@ -135,16 +135,11 @@ body {
 }
 #sidebar-content {
   margin: 0 6px 0 6px;
-  height: calc(100vh - 116px);
+  height: calc(100vh - 80px);
   /*height: calc(100vh - 80px - 8px);
   width: calc(200px - 8px);*/
   font-size: 16px;
   line-height: 20px;
-}
-@media only screen and (min-width: 768px) {
-  #sidebar-content {
-    height: calc(100vh - 80px);
-  }
 }
 #sidebar-content {
   background-color: #1e1e1e;
@@ -287,8 +282,8 @@ body {
 }
 
 #buffers {
-  width: calc(100% - 30px);
-  height: calc(100% - 76px);
+  width: calc(100% - 12px);
+  height: calc(100% - 46px);
   border-right: 6px solid #121212;
   border-left: 6px solid #121212;
 }
