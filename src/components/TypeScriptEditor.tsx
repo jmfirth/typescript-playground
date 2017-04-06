@@ -130,6 +130,7 @@ declare module '${matches ? matches[1] : key}' {
     return (
       <MonacoEditor
         width="100%"
+        height="100%"
         language="typescript"
         defaultValue={this.props.code}
         options={this.props.editorOptions}

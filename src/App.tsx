@@ -112,8 +112,9 @@ class App extends Component<null, State> {
     if (!project) { return; }
     let filePath: string | null;
     while (filePath = prompt('Enter the name of a code file.  Please use a ts or tsx extension for now.')) {
-        const ext = path.extname(filePath);
-        if (ext === '.ts' || ext === '.tsx') { break; }
+      filePath = path.normalize(filePath.replace(/\\/g, '/'));
+      const ext = path.extname(filePath);
+      if (ext === '.ts' || ext === '.tsx' || ext === '.js' || ext === '.jsx') { break; }
     }
     if (!filePath) { return; }
     if (!filePath.startsWith('./')) { filePath = `./${filePath}`; }
@@ -331,6 +332,8 @@ class App extends Component<null, State> {
             />
             {project && (
               <ProjectFilesTreeView
+                className="sidebar-tree"
+                selectedPath={show}
                 filePaths={Object.keys(project.files)}
                 onClick={(filePath: string) => {
                   this.setState({ show: '' });
@@ -345,10 +348,18 @@ class App extends Component<null, State> {
                 tooltip={`${showCodeFrame ? 'Hide' : 'Show'} code frame`}
                 name="code-tags"
                 className={showCodeFrame ? 'toolbar-icon--enabled' : undefined}
-                onClick={() => this.setState({
-                  showCodeFrame: !showCodeFrame,
-                  autohideToolbar: showCodeFrame && showRenderFrame ? false : autohideToolbar,
-                })}
+                onClick={() => {
+                  // @TODO - remove this hack
+                  if (showRenderFrame) { this.setState({ showRenderFrame: showCodeFrame }); }
+                  setTimeout(
+                    () => this.setState({
+                      showRenderFrame,
+                      showCodeFrame: !showCodeFrame,
+                      autohideToolbar: showCodeFrame && showRenderFrame ? false : autohideToolbar,
+                    }),
+                    250
+                  );
+                }}
               />
               <IconButton
                 tooltip={`${showRenderFrame ? 'Hide' : 'Show'} render frame`}

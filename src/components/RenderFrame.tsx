@@ -66,6 +66,14 @@ export default class RenderFrame extends Component<Props, null> {
     }
   }
 
+  componentWillUnmount() {
+    if (this.container && this.iframe) {
+      this.iframe.remove();
+      this.iframe.innerHTML = '';
+      this.iframe = undefined;
+    }
+  }
+
   loadIframe(code: string, css: string, html: string, modules?: ModuleMap) {
     if (!this.iframe) { return; }
     const win: Window = this.iframe.contentWindow
@@ -80,13 +88,9 @@ export default class RenderFrame extends Component<Props, null> {
     const { code, css, html, modules } = this.props;
     return (
       <div
-        style={{ width: '100%', height: '100%' }}
+        className="surface-container"
         ref={(c: HTMLDivElement) => {
-          if (!c) {
-            this.container = undefined;
-            this.iframe = undefined;
-            return;
-          }
+          if (!c) { return; }
           this.container = c;
           this.container.innerText = '';
           this.iframe = document.createElement('iframe');

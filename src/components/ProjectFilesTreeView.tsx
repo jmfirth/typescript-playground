@@ -21,38 +21,45 @@ interface FileTreeDirectory extends FileTreeNode<'directory'> {
 }
 
 interface DirectoryTreeItemProps {
+  selectedPath?: string;
   directoryPath: string;
   tree: FileTree;
   onClick?: (id: any) => void; // tslint:disable-line no-any
 }
 
-const DirectoryTreeItem = ({ directoryPath, tree, onClick }: DirectoryTreeItemProps): JSX.Element => (
+const DirectoryTreeItem = ({ directoryPath, tree, onClick, selectedPath }: DirectoryTreeItemProps): JSX.Element => (
   <TreeView
     nodeLabel={directoryPath.substring(directoryPath.lastIndexOf('/') + 1, directoryPath.length)}
     defaultCollapsed={false}
   >
-    <FileTreeFilesView tree={tree} onClick={onClick} /> {/* tslint:disable-line no-use-before-declare */}
+    {/* tslint:disable-next-line no-use-before-declare */}
+    <FileTreeFilesView tree={tree} onClick={onClick} selectedPath={selectedPath} />
   </TreeView>
 );
 
 interface FileTreeItemProps {
+  selected?: boolean;
   filePath: string;
   onClick?: (id: any) => void; // tslint:disable-line no-any
 }
 
-const FileTreeItem = ({ filePath, onClick }: FileTreeItemProps) => (
-  <div className="tree-view_item--clickable" onClick={() => onClick && onClick(filePath)}>
+const FileTreeItem = ({ filePath, onClick, selected = false }: FileTreeItemProps) => (
+  <div
+    className={`tree-view_item tree-view_item--clickable ${selected ? 'tree-view_item--selected' : ''}`}
+    onClick={() => onClick && onClick(filePath)}
+  >
     <Icon name={Project.getDisplayFromFilePath(filePath).iconType} className="sidebar-file-icon" />
     <span>{path.basename(filePath)}</span>
   </div>
 );
 
 interface FileTreeFilesViewProps {
+  selectedPath?: string;
   tree: FileTree;
   onClick?: (id: any) => void; // tslint:disable-line no-any
 }
 
-export const FileTreeFilesView = ({ tree, onClick }: FileTreeFilesViewProps): JSX.Element => {
+export const FileTreeFilesView = ({ tree, onClick, selectedPath }: FileTreeFilesViewProps): JSX.Element => {
   const sortedDirectories = Object.keys(tree).filter(filePath => tree[filePath].type === 'directory').sort();
   const sortedFiles = Object.keys(tree).filter(filePath => tree[filePath].type === 'file').sort();
   const sorted = [...sortedDirectories, ...sortedFiles];
@@ -61,9 +68,10 @@ export const FileTreeFilesView = ({ tree, onClick }: FileTreeFilesViewProps): JS
       {sorted.map(key => {
         const item = tree[key];
         return tree[key].type === 'file'
-          ? <FileTreeItem filePath={item.path} onClick={onClick} />
+          ? <FileTreeItem selected={item.path === selectedPath} filePath={item.path} onClick={onClick} />
           : (
             <DirectoryTreeItem
+              selectedPath={selectedPath}
               directoryPath={item.path}
               tree={(item as FileTreeDirectory).children}
               onClick={onClick}
@@ -104,11 +112,21 @@ function pathsToTree(filePaths: string[]): FileTree {
 }
 
 interface ProjectFilesTreeViewProps {
+  className?: string;
+  selectedPath?: string;
   filePaths: string[];
   onClick?: (filePath: string) => void;
 }
 
-export default ({ filePaths, onClick }: ProjectFilesTreeViewProps) => {
+export default ({ className, filePaths, onClick, selectedPath }: ProjectFilesTreeViewProps) => {
   const tree = pathsToTree(filePaths);
-  return <FileTreeFilesView tree={tree} onClick={(id: string) => onClick && onClick(id)} />;
+  return (
+    <div className={className}>
+      <FileTreeFilesView
+        selectedPath={selectedPath}
+        tree={tree}
+        onClick={(id: string) => onClick && onClick(id)}
+      />
+    </div>
+  );
 };

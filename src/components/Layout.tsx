@@ -33,7 +33,7 @@ export class Window extends Component<WindowProps, WindowState> {
       <div
         id="window"
         // tslint:disable-next-line max-line-length
-        className={`${sidebarOpen ? 'sidebar-open' : ''} ${autohideToolbar ? 'autohide-toolbar' : ''} ${mouseAtTop ? 'autohide-toolbar--show' : ''} ${theme}`}
+        className={`${sidebarOpen ? 'sidebar-open' : 'sidebar-close'} ${autohideToolbar ? 'autohide-toolbar' : ''} ${mouseAtTop ? 'autohide-toolbar--show' : ''} ${theme}`}
         onMouseMove={(e: MouseEvent) => this.handleMouseMove(e)}
       >
         {children}

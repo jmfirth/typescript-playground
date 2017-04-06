@@ -50,15 +50,33 @@ body {
 }
 @media only screen and (min-width: 768px) {
   #window.sidebar-open #container {
+    left: 0px;
     -webkit-animation: slide2 0.35s forwards;
     animation: slide2 0.35s forwards;
   }
 }
 @-webkit-keyframes slide2 {
+    0% { left: 0px; }
     100% { left: 250px; }
 }
 @keyframes slide2 {
+    0% { left: 0px; }
     100% { left: 250px; }
+}
+@media only screen and (min-width: 768px) {
+  #window.sidebar-close #container {
+    left: 0px;
+    -webkit-animation: slide4 0.35s forwards;
+    animation: slide4 0.35s forwards;
+  }
+}
+@-webkit-keyframes slide4 {
+    0% { left: 250px; }
+    100% { left: 0px; }
+}
+@keyframes slide4 {
+    0% { left: 250px; }
+    100% { left: 0px; }
 }
 
 #window.sidebar-open #sidebar-overlay {
@@ -90,31 +108,68 @@ body {
   background-color: #c2c2c2;
 }
 #window.sidebar-open #sidebar {
+  left: 0px;
   -webkit-animation: slide 0.35s forwards;
   animation: slide 0.35s forwards;
 }
 @-webkit-keyframes slide {
+    0% { left: -250px; }
     100% { left: 0; }
 }
 @keyframes slide {
+    0% { left: -250px; }
     100% { left: 0; }
+}
+#window.sidebar-close #sidebar {
+  left: -250px;
+  -webkit-animation: slide3 0.35s forwards;
+  animation: slide3 0.35s forwards;
+}
+@-webkit-keyframes slide3 {
+    0% { left: 0px; }
+    100% { left: -250px; }
+}
+@keyframes slide3 {
+    0% { left: 0px; }
+    100% { left: -250px; }
 }
 #sidebar-content {
   margin: 0 6px 0 6px;
-  height: calc(100vh - 80px);
+  height: calc(100vh - 116px);
   /*height: calc(100vh - 80px - 8px);
   width: calc(200px - 8px);*/
   font-size: 16px;
   line-height: 20px;
+}
+@media only screen and (min-width: 768px) {
+  #sidebar-content {
+    height: calc(100vh - 80px);
+  }
 }
 #sidebar-content {
   background-color: #1e1e1e;
   color: #ccc;
 }
 #window.light #sidebar-content {
-  background-color: #d2d2d2;
-  color: #000;
+  background-color: #e2e2e2;
+  color: #212121;
 }
+/*.sidebar-tree {}*/
+.sidebar-tree .tree-view_item:hover {
+  background-color: #191919;
+}
+#window.light .sidebar-tree .tree-view_item:hover {
+  background-color: #d6d6d6;
+}
+.sidebar-tree .tree-view_item.tree-view_item--selected,
+.sidebar-tree .tree-view_item.tree-view_item--selected:hover {
+  background-color: #121212;
+}
+#window.light .sidebar-tree .tree-view_item.tree-view_item--selected,
+#window.light .sidebar-tree .tree-view_item.tree-view_item--selected:hover {
+  background-color: #c2c2c2;
+}
+/*
 .sidebar-tree {
   list-style-type: none;
   padding: 0px;
@@ -130,7 +185,7 @@ body {
   color: #fefefe;
 }
 #window.light .sidebar-tree li {
-  color: #000;
+  color: #212121
 }
 .sidebar-tree li:hover {
   background-color: #121212;
@@ -147,6 +202,7 @@ body {
 #window.light .sidebar-tree li.selected {
   background-color: #fdfdfd;
 }
+*/
 .sidebar-file-icon {
   font-size: 14px;
   margin-right: 7px;
@@ -189,7 +245,7 @@ body {
   color: rgba(215, 90, 100, 1);
 }
 #window.light .toolbar-title {
-  color: orangered;
+  color: #0000FF;
 }
 @media only screen and (min-width: 768px) {
   .toolbar-title.is-contenteditable:hover {
@@ -227,12 +283,33 @@ body {
   color: rgba(240, 198, 116, 1);
 }
 #window.light .toolbar-icon--enabled i {
-  color: slateblue;
+  color: #09885A;
 }
 
 #buffers {
-  width: 100%;
-  height: calc(100% - 40px);
+  width: calc(100% - 30px);
+  height: calc(100% - 76px);
+  border-right: 6px solid #121212;
+  border-left: 6px solid #121212;
+}
+@media only screen and (min-width: 768px) {
+  #buffers {
+  /*width: 100%;*/
+    /*border-left: none;
+    border-right: none;*/
+    width: calc(100% - 6px);
+    height: calc(100% - 40px);
+  }
+  #window.sidebar-open #buffers {
+  /*width: 100%;*/
+    /*border-left: none;
+    border-right: none;*/
+    border-left: none;
+    width: 100%;
+  }
+}
+#window.autohide-toolbar #buffers {
+  height: 100%;
 }
 #window.autohide-toolbar #buffers {
   height: 100%;
@@ -285,6 +362,14 @@ body {
     height: 50%;
   }
 }
+.buffer .react-monaco-editor-container {
+  height: calc(100% - 36px) !important;
+}
+@media only screen and (min-width: 768px) {
+  .buffer .react-monaco-editor-container {
+    height: calc(100% - 42px) !important;
+  }
+}
 
 .button {
   padding: 5px 15px;
@@ -317,7 +402,7 @@ body {
 #window.light .button.button-selected,
 #window.light .button.button-selected:hover {
   background-color: #d5d5d5 !important;
-  color: #000;
+  color: #212121
 }
 .toolbar-tab .button i {
   display: none;
@@ -334,6 +419,10 @@ body {
   background-color: #d2d2d2;
 }
 
+.surface-container {
+  width: 100%;
+  height: calc(100% - 6px);
+}
 .surface {
   width: 100%;
   height: 100%;
@@ -374,7 +463,7 @@ body {
     background-color: #999;
   }
   #window.light .tooltip .tooltiptext {
-    background-color: #666;
+    background-color: #999;
   }
   .tooltip:hover .tooltiptext {
     visibility: visible;
@@ -416,7 +505,7 @@ body {
 }
 #window.light #definitions-editor {
   background-color: #d4d4d4;
-  color: #000;
+  color: #212121
 }
 
 td.center {
@@ -432,11 +521,13 @@ td.center {
 .editor-header {
   color: #ccc;
   background-color: #2e2e2e;
+  border-top: 6px solid #121212;
   border-bottom: 6px solid #121212;
 }
 #window.light .editor-header {
   color: #333;
-  background-color: #fdfdfd;
+  background-color: #e2e2e2;
+  border-top: 6px solid #c2c2c2;
   border-bottom: 6px solid #c2c2c2;
 }
 .editor-header-filename {
@@ -463,7 +554,7 @@ td.center {
   color: #ccc;
 }
 #window.light .tree-view {
-  color: #000;
+  color: #212121
 }
 /*.tree-view_item {
   // immediate child of .tree-view, for styling convenience
