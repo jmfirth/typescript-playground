@@ -14,7 +14,7 @@ import {
   Window,
 } from './components';
 import { Abilities, Compiler, Github, Location, Project, Storage } from './utilities';
-import './App.css';
+// import './App.css';
 
 const { CSSEditor, HTMLEditor, TypeScriptEditor } = Editors;
 
