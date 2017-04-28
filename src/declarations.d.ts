@@ -11,3 +11,8 @@ declare module 'inline-style-prefixer' {
   import ISP = InlineStylePrefixer;
   export = ISP.Prefixer;
 }
+
+declare module 'react-monaco-editor' {
+  var RME: any;
+  export default RME;
+}

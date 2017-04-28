@@ -1,0 +1,47 @@
+@import "../../appearance/style/variables";
+
+#window {
+  &.ui.segment,
+  .ui.segment {
+    border-radius: 0;
+    border: 0;
+  }
+
+  .action-sidebar {
+    background-color: $border-color;
+  }
+
+  .action-sidebar .action-sidebar__selected {
+    color: $text-highlight !important;
+  }
+
+  .action-sidebar a.item,
+  .action-sidebar div.item {
+    height: 50px;
+  }
+
+  .action-sidebar a.item:before,
+  .action-sidebar div.item:before {
+    display: none;
+  }
+
+  .action-sidebar.ui.vertical.sidebar.menu > .item:first-child:before,
+  .action-sidebar.ui.vertical.sidebar.menu > .item::before {
+    display: none !important;
+  }
+
+  .content-sidebar {
+    background-color: $sidebar-content-color;
+    transition-duration: 0s;
+
+    + .pusher {
+      width: calc(100vw - 60px) !important;
+      height: 100vh;
+      transition-duration: 0s;
+    }
+
+    &.visible + .pusher {
+      width: calc(100vw - 350px - 60px) !important;
+    }
+  }
+}

@@ -41,22 +41,25 @@ export function createConfiguration(files: EditorSourceFile[], entry: string) {
   if (jsxFactories && jsxFactories.length > 0) {
     jsxFactory = (jsxFactories[0] || '').toString().trim();
   }
+  const compilerOptions: TypeScript.CompilerOptions = {
+    outFile: 'bundle.js',
+    module: TypeScript.ModuleKind.AMD,
+    target: TypeScript.ScriptTarget.ES5,
+    // lib: ['es6', 'dom', 'node'],
+    jsx: TypeScript.JsxEmit.React,
+    jsxFactory: !!jsxFactory ? 'h' : undefined,
+    allowJs: true,
+    maxNodeModuleJsDepth: 100,
+    allowSyntheticDefaultImports: true,
+    // sourceMap: false,
+    // inlineSourceMap: false,
+  };
   return  {
     sourceBundle: {
       entry,
       files,
     },
-    compilerOptions: {
-      outFile: 'bundle.js',
-      module: TypeScript.ModuleKind.AMD,
-      target: TypeScript.ScriptTarget.ES5,
-      // lib: ['es6', 'dom', 'node'],
-      jsx: TypeScript.JsxEmit.React,
-      jsxFactory: !!jsxFactory ? 'h' : undefined,
-      allowJs: true,
-      maxNodeModuleJsDepth: 100,
-      allowSyntheticDefaultImports: true,
-    },
+    compilerOptions,
   };
 }
 
@@ -69,6 +72,9 @@ export function compile(sourceBundle: SourceBundle, options: TypeScript.Compiler
       languageVersion: TypeScript.ScriptTarget,
       onError?: (message: string) => void,
     ): TypeScript.SourceFile => {
+      if (!fileName || fileName === '.tsx' || fileName === '.ts' || fileName === '.js' || fileName === '.jsx') {
+        return null as any as TypeScript.SourceFile; // tslint:disable-line no-any
+      }
       const matches = sourceBundle.files.filter(file => file.fileName.indexOf(fileName) > -1);
       if (matches.length) {
         const file = matches[0];
@@ -90,8 +96,10 @@ export function compile(sourceBundle: SourceBundle, options: TypeScript.Compiler
 
     getCurrentDirectory: () => '', // TypeScript.sys.getCurrentDirectory(),
 
-    getCanonicalFileName: fileName => /*TypeScript.sys.useCaseSensitiveFileNames*/ true
-      ? fileName : fileName.toLowerCase(),
+    getCanonicalFileName: fileName => {
+      /*TypeScript.sys.useCaseSensitiveFileNames*/
+      return true ? fileName : fileName.toLowerCase();
+    },
 
     getNewLine: () => '\n', // TypeScript.sys.newLine,
 
@@ -100,6 +108,7 @@ export function compile(sourceBundle: SourceBundle, options: TypeScript.Compiler
     fileExists: (fileName: string) => true,
 
     readFile(fileName: string): string {
+      if (!fileName) { return ''; }
       const matches = sourceBundle.files.filter(file => fileName.indexOf(file.fileName) > -1);
       if (matches.length) {
         const file = matches[0];

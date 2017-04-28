@@ -1,8 +1,7 @@
-import { ModuleMap } from './project';
-import { Definitions } from '../definitions';
+import { Definitions, Modules } from './project';
 import * as moment from 'moment';
-import * as storage from './storage';
-import * as location from './location';
+import * as Storage from './storage';
+import * as Location from './location';
 
 const LOCAL_STORAGE_PREFIX = 'tspg-app-';
 
@@ -14,7 +13,9 @@ const REDIRECT_URI = `${window.location.origin}${window.location.pathname}`;
 
 const SCOPES = 'user:email,gist';
 
-let accessToken = storage.getStorageItem(LOCAL_STORAGE_PREFIX, ACCESS_TOKEN);
+let user: GithubAuthenticatedUser | void = undefined;
+
+let accessToken = Storage.getStorageItem(LOCAL_STORAGE_PREFIX, ACCESS_TOKEN);
 
 export const GITHUB_OAUTH_URL =
   `https://github.com/login/oauth/authorize?client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&scope=${SCOPES}`;
@@ -24,18 +25,18 @@ export function checkAuthentication() {
 }
 
 export async function maybeAuthenticate() {
-  const code = location.getQueryStringParameter('code');
+  const code = Location.getQueryStringParameter('code');
   if (code) {
     accessToken = await getAccessToken(code);
     if (accessToken) {
       const expires = moment().add(14, 'days').toDate();
-      storage.setStorageItem(LOCAL_STORAGE_PREFIX, ACCESS_TOKEN, accessToken, expires);
+      Storage.setStorageItem(LOCAL_STORAGE_PREFIX, ACCESS_TOKEN, accessToken, expires);
       // tslint:disable-next-line no-console
       console.info('Github authentication successful.', accessToken);
       return true;
     } else {
       accessToken = undefined;
-      storage.removeStorageItem(LOCAL_STORAGE_PREFIX, ACCESS_TOKEN);
+      Storage.removeStorageItem(LOCAL_STORAGE_PREFIX, ACCESS_TOKEN);
       alert('Github authentication failed');
     }
   }
@@ -53,27 +54,42 @@ async function getAccessToken(code: string) {
   }
 }
 
+export function logout() {
+  Storage.removeStorageItem(LOCAL_STORAGE_PREFIX, ACCESS_TOKEN);
+}
+
 function getAuthorizationHeader() {
   return { 'Authorization': `token ${accessToken}` };
 }
 
 export async function getUser() {
   if (!accessToken) { return; }
+  if (user) { return user; }
   try {
     const res = await fetch('https://api.github.com/user', { headers: getAuthorizationHeader() });
-    return await res.json() as GithubAuthenticatedUser;
+    user = await res.json() as GithubAuthenticatedUser;
+    return user;
+
   } catch (e) {
     alert('Error retrieving user');
     return;
   }
 }
 
+export function clearGists() {
+  Storage.removeStorageItem(LOCAL_STORAGE_PREFIX, 'github_gists');
+}
+
 export async function listGists(username?: string) {
+  let gists = Storage.getStorageItem(LOCAL_STORAGE_PREFIX, 'github_gists');
+  if (gists) { return gists; }
   if (!accessToken) { return; }
   const url = `https://api.github.com${username ? `/users/${username}` : ''}/gists`;
   try {
     const res = await fetch(url, { headers: getAuthorizationHeader() });
-    return await res.json();
+    gists = await res.json() as Gist[];
+    Storage.setStorageItem(LOCAL_STORAGE_PREFIX, 'github_gists', gists);
+    return gists;
   } catch (e) {
     alert('Error retrieving user');
     return;
@@ -224,7 +240,7 @@ export async function createGist(
   description: string,
   files: GistFiles,
   definitions: Definitions,
-  packages: ModuleMap,
+  packages: Modules,
   isPublic: boolean = true,
 ) {
   if (!accessToken) { return; }
@@ -248,6 +264,8 @@ export async function createGist(
     try {
       const url = `https://jmfirth.github.io/typescript-playground/?gistId=${gist.id}`;
       await addCommentToGist(gist.id, `View this in the [TypeScript Playground](${url}).`);
+      clearGists();
+      await listGists();
     } catch (f) {
       alert('Was not able to add TypeScript Playground url as a comment to the new gist');
     }
@@ -273,7 +291,7 @@ export async function updateGist(
   description: string,
   files: GistFiles,
   definitions: Definitions,
-  modules: ModuleMap
+  modules: Modules
 ) {
   if (!accessToken) { return; }
   const fb = new GistFilesBuilder(files);

@@ -1,4 +1,4 @@
-import { h, Component } from 'preact';
+import * as React from 'react';
 import { debounce } from 'lodash';
 import MonacoEditor from './MonacoEditor';
 
@@ -7,6 +7,7 @@ interface References { [name: string]: string; }
 interface Props {
   code?: string;
   transpile?: boolean;
+  transpileDebounce?: number;
   editorDidMount?: (editor: monaco.editor.IEditor, mod: typeof monaco) => void;
   onChange?: (code: string) => void;
   editorOptions?: monaco.editor.IEditorOptions;
@@ -14,7 +15,7 @@ interface Props {
   definitions?: References;
 }
 
-export default class TypeScriptEditor extends Component<Props, void> {
+export default class TypeScriptEditor extends React.Component<Props, void> {
   monaco: typeof monaco;
   editor: monaco.editor.IEditor;
 
@@ -30,19 +31,14 @@ export default class TypeScriptEditor extends Component<Props, void> {
     if (this.props.code) {
       this.editorChanged(this.props.code);
     }
-    this.editorChanged = debounce(this.editorChanged, 500);
+    this.editorChanged = debounce(this.editorChanged, this.props.transpileDebounce || 500);
   }
 
   componentWillReceiveProps(next: Props) {
-    // debugger;
     if (this.editor && next.editorOptions) {
-      // console.log('updating editor options');
       this.editor.updateOptions(next.editorOptions);
+      this.addLanguageDefinitions(next.definitions);
     }
-    // const missingDefinitions = next.def
-    // if () {
-    //   this.addLanguageDefinitions(next.definitions);
-    // }
   }
 
   fixWebWorkers() {
@@ -71,18 +67,7 @@ export default class TypeScriptEditor extends Component<Props, void> {
     await this.loadDefinitions(definitions);
     const extraLibsKey = '_extraLibs';
     const typescriptDefaults = this.monaco.languages.typescript.typescriptDefaults;
-    // typescriptDefaults[extraLibsKey] = {};
     Object.keys(definitions).forEach(key => {
-//       let lib = this.definitionSources[key];
-//       if (lib.indexOf('declare module \'') === -1) {
-//         const matches = key.match(/(.*)\/(.*).d.ts/);
-//         lib = `
-// declare module '${matches ? matches[1] : key}' {
-// ${lib}
-// }
-// `;
-//         typescriptDefaults[extraLibsKey][key] = lib;
-//       }
       if (this.props.definitions && !typescriptDefaults[extraLibsKey][key]) {
         let lib = this.definitionSources[key];
         if (lib.indexOf('declare module \'') === -1) {
@@ -107,14 +92,6 @@ declare module '${matches ? matches[1] : key}' {
   }
 
   editorChanged(code: string, event?: monaco.editor.IModelContentChangedEvent2) {
-    // const { onChange, transpile = true } = this.props;
-    // if (onChange && transpile) {
-    //   const result = this.compileSource(code);
-    //   if (result) {
-    //     onChange(code, result.source, result.diagnostics);
-    //   }
-    // } else
-
     const { onChange } = this.props;
     if (onChange) {
       onChange(code);

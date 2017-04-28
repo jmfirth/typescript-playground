@@ -1,0 +1,61 @@
+@import "../../appearance/style/variables";
+
+$text-color: rgba(204, 204, 204, 1);
+$sans-serif-font-family: -apple-system, BlinkMacSystemFont, Segoe WPC, Segoe UI, HelveticaNeue-Light, Ubuntu, Droid Sans, sans-serif;
+$mono-font-family: 'Source Code Pro', Menlo, Consolas, monospace;
+
+.accordion.sidebar-accordion > .title {
+  background-color: $border-color;
+  color: $text-color !important;
+  font-weight: bold;
+  text-transform: uppercase;
+  // border-bottom: 5px solid #1e1e1e;
+  // box-shadow: 0 3px 0  0 rgba(0, 0, 0, 0.4);
+  padding-left: 15px !important;
+}
+
+.accordion.sidebar-accordion > .content {
+  padding-top: 0 !important;
+}
+
+.accordion.sidebar-accordion .item {
+  .content {
+    line-height: 24px !important;
+    padding-left: 15px !important;
+  }
+
+  &:before {
+    display: none !important;
+  }
+
+  .ui.input {
+    width: 100%;
+
+    input[type="text"] {
+      background-color: transparent;
+      // padding: 3px 7px;
+      width: 100%;
+      border: 0;
+      outline: 0;
+      color: #ccc;
+      width: 100%;
+    }
+  }
+}
+
+.sidebar-accordion .sidebar-accordion__title {
+  display: flex;
+  flex: 1;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+
+  .sidebar-accordion__title-left {
+    flex: 1;
+    text-align: left;
+  }
+  .sidebar-accordion__title-right {
+    flex: 1;
+    text-align: right;
+  }
+}

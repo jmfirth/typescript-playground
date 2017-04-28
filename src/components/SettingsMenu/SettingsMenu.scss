@@ -1,0 +1,10 @@
+@import "../../appearance/style/variables";
+
+.settings-menu {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  padding: 30px;
+  color: #ccc;
+}

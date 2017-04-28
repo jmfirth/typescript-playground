@@ -1,7 +1,7 @@
-import { h, Component } from 'preact';
+import * as React from 'react';
 import debounce = require('lodash/debounce');
 import MonacoEditor from './MonacoEditor';
-import { Abilities } from '../utilities';
+import { Abilities } from '../../utilities';
 
 interface HTMLEditorProps {
   code?: string;
@@ -9,7 +9,7 @@ interface HTMLEditorProps {
   onChange?: (code: string) => void;
 }
 
-export default class HTMLEditor extends Component<HTMLEditorProps, void> {
+export default class HTMLEditor extends React.Component<HTMLEditorProps, void> {
   monaco: typeof monaco;
 
   editor: monaco.editor.IEditor;

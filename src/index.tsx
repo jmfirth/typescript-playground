@@ -1,11 +1,9 @@
-import { h, render } from 'preact';
+import * as React from 'react';
+import { render } from 'react-dom';
 import App from './App';
-import 'material-design-icons/iconfont/material-icons.css';
-import 'mdi/css/materialdesignicons.css';
-import 'mdi/fonts/materialdesignicons-webfont.ttf';
-import 'mdi/fonts/materialdesignicons-webfont.woff';
-import 'mdi/fonts/materialdesignicons-webfont.woff2';
+import 'semantic-ui-css/semantic.css';
 import './index.css';
+// import './appearance/style/main.css';
 
 render(
   <App />,

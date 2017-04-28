@@ -7,7 +7,6 @@
     "sourceMap": true,
     "allowJs": true,
     "jsx": "react",
-    "jsxFactory": "h",
     "moduleResolution": "node",
     "rootDir": "src",
     "forceConsistentCasingInFileNames": true,
@@ -16,7 +15,12 @@
     "noImplicitAny": true,
     "strictNullChecks": true,
     "suppressImplicitAnyIndexErrors": true,
-    "noUnusedLocals": true
+    "noUnusedLocals": true,
+    "baseUrl": "./",
+    "paths": {
+      "react": ["node_modules/preact-compat/"],
+      "react-dom": ["node_modules/preact-compat/"]
+    }
   },
   "exclude": [
     "node_modules",

@@ -1,5 +1,6 @@
 /* tslint:disable no-string-literal no-any */
-import { h, Component } from 'preact';
+import * as React from 'react';
+import './MonacoEditor.css';
 
 import IThemeRule = monaco.editor.IThemeRule;
 export const monokai: IThemeRule[] = [
@@ -65,7 +66,21 @@ interface State {
 
 }
 
-class MonacoEditor extends Component<Props, State> {
+class MonacoEditor extends React.Component<Props, State> {
+  static defaultProps = {
+    width: '100%',
+    height: '100%',
+    value: null,
+    defaultValue: '',
+    language: 'javascript',
+    theme: 'vs',
+    options: {},
+    editorDidMount: noop,
+    editorWillMount: noop,
+    onChange: noop,
+    requireConfig: {},
+  };
+
   __current_value: any; // tslint:disable-line variable-name
 
   __prevent_trigger_change_event: any;  // tslint:disable-line variable-name
@@ -444,19 +459,19 @@ class MonacoEditor extends Component<Props, State> {
   }
 }
 
-MonacoEditor.defaultProps = {
-  width: '100%',
-  height: '100%',
-  value: null,
-  defaultValue: '',
-  language: 'javascript',
-  theme: 'vs',
-  options: {},
-  editorDidMount: noop,
-  editorWillMount: noop,
-  onChange: noop,
-  requireConfig: {},
-};
+// MonacoEditor.defaultProps = {
+//   width: '100%',
+//   height: '100%',
+//   value: null,
+//   defaultValue: '',
+//   language: 'javascript',
+//   theme: 'vs',
+//   options: {},
+//   editorDidMount: noop,
+//   editorWillMount: noop,
+//   onChange: noop,
+//   requireConfig: {},
+// };
 
 export default MonacoEditor;
 

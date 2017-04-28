@@ -1,4 +1,4 @@
-export type Definitions = { [path: string]: string; };
+import { Definitions } from './utilities/project';
 
 export const defaults = {
   // 'node/index.d.ts': 'https://unpkg.com/@types/node/index.d.ts',
