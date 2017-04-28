@@ -23,7 +23,7 @@ function createSourceHtml(source: string, css: string, html: string, modules?: M
     <style type="text/css">
 ${css}
     </style>
-    ${pkgzipQueryString ? `<script src="http://pkgzip.com/?${pkgzipQueryString}"></script>` : ''}
+    ${pkgzipQueryString ? `<script src="//pkgzip.com/?${pkgzipQueryString}"></script>` : ''}
     <script src="https://cdnjs.cloudflare.com/ajax/libs/systemjs/0.20.11/system.js"></script>
   </head>
   <body>
