@@ -2,6 +2,7 @@
   "name": "typescript-playground-semanticui",
   "version": "0.1.0",
   "private": true,
+  "homepage": "http://jmfirth.github.io/typescript-playground",
   "devDependencies": {
     "preact-compat-scripts-ts": "0.9.24"
   },
